@@ -1,6 +1,20 @@
 #!/bin/ruby
 require 'matrix'
 
+def onematrix(n)
+
+    v = []
+    n.times do |i|
+        a = []
+        n.times do |i|
+            a << 1
+        end
+        v << a
+    end
+    
+    return Matrix.rows(v)
+end
+
 #The first value is later on not scaled by 2.5, but only by 2.. So the value at
 # 0,0 is in this matrix (originaly 16) divided by 2.5 and that multiplied by 2
 jpegmatrix = [[12.8,11,10,16,24,40,51,61],
@@ -12,14 +26,25 @@ jpegmatrix = [[12.8,11,10,16,24,40,51,61],
 [49,64,78,87,103,121,120,101],
 [72,92,95,98,112,100,103,99]]
 
+#jpeg chrominanz matrix.
+jpegmatrixchrom = [[ 3.2, 4, 6, 11, 24, 24, 24, 24 ],
+		    [ 4, 5, 6, 16, 24, 24, 24, 24 ],
+		    [ 6, 6, 14, 24, 24, 24, 24, 24 ],
+		    [ 11, 16, 24, 24, 24, 24, 24, 24 ],
+		    [ 24, 24, 24, 24, 24, 24, 24, 24 ],
+		    [ 24, 24, 24, 24, 24, 24, 24, 24 ],
+		    [ 24, 24, 24, 24, 24, 24, 24, 24 ],
+		    [ 24, 24, 24, 24, 24, 24, 24, 24 ]]
+
+
 #Calculate the 16x16 quant matrix q
 q = []
 
 
 jpm = Matrix.rows(jpegmatrix)
-right_top = jpm[0,7]*Matrix.I(8)
-left_bottom = jpm[7,0]*Matrix.I(8)
-right_bottom = jpm[7,7]*Matrix.I(8)
+right_top = jpm[0,7]*onematrix(8)
+left_bottom = jpm[7,0]*onematrix(8)
+right_bottom = jpm[7,7]*onematrix(8)
 
 #merge
 (0..7).each do |i|
