@@ -11,15 +11,15 @@ public class View extends JFrame implements Observer {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		// TODO Auto-generated method stub
 
 	}
 
+	public View() {
+		super();
+	}
 	
 	@Override
 	public void update(Observable arg0, Object arg1) {
-		// TODO Auto-generated method stub
 		
 	}
-
 }
