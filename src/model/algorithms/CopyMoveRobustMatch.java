@@ -4,11 +4,15 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.List;
 
 import javax.imageio.ImageIO;
 
+import com.sun.xml.internal.fastinfoset.tools.PrintTable;
+
+import edu.emory.mathcs.jtransforms.dct.FloatDCT_1D;
 import edu.emory.mathcs.jtransforms.dct.FloatDCT_2D;
 
 /**
@@ -199,6 +203,7 @@ public class CopyMoveRobustMatch extends ICopyMoveDetection {
 		if (!checkImage(input))
 			return;
 
+		printTime();
 		int blockCount_x = input.getWidth() - BLOCK_SIZE + 1;
 		int blockCount_y = input.getHeight() - BLOCK_SIZE + 1;
 		int height = input.getHeight();
@@ -215,10 +220,13 @@ public class CopyMoveRobustMatch extends ICopyMoveDetection {
 						* 0.299 + ((pixel >> 8) & 0xff) * 0.587 + ((pixel) & 0xff) * 0.114);
 			}
 		}
+		System.out.println("Grayscale Matrix: ");
+		printTime();
 
 		/*
 		 * Calculate the dcts of each block...
 		 */
+		FloatDCT_1D tr = new FloatDCT_1D(BLOCK_SIZE * BLOCK_SIZE);
 		List<Block> dcts = new ArrayList<Block>(blockCount_x * blockCount_y);
 		for (int y = 0; y < blockCount_y; y++) {
 			for (int x = 0; x < blockCount_x; x++) {
@@ -226,11 +234,15 @@ public class CopyMoveRobustMatch extends ICopyMoveDetection {
 				dcts.add(b);
 			}
 		}
+		System.out.println("DCTs: ");
+		printTime();
 
 		/*
 		 * Sort the dcts lexicographically...
 		 */
 		Collections.sort(dcts);
+		System.out.println("Sorting DCTs: ");
+		printTime();
 
 		/*
 		 * Collect vectors... The Shift Vector is an array double of the
@@ -259,6 +271,10 @@ public class CopyMoveRobustMatch extends ICopyMoveDetection {
 				shiftVectors[sy * width + sx]++;
 			}
 		}
+		System.out.println("Shift Vectors: ");
+		printTime();
+
+		int rgbArray[] = new int[BLOCK_SIZE * BLOCK_SIZE];
 
 		/*
 		 * Mark the detected copies...
@@ -281,11 +297,15 @@ public class CopyMoveRobustMatch extends ICopyMoveDetection {
 				sy += height;
 
 				if (shiftVectors[sy * width + sx] > threshold) {
-					input.setRGB(b1.getPos_x(), b1.getPos_y(), 0);
-					input.setRGB(b2.getPos_x(), b2.getPos_y(), 0);
+					input.setRGB(b1.getPos_x(), b1.getPos_y(), 16, 16,
+							rgbArray, 0, BLOCK_SIZE);
+					input.setRGB(b2.getPos_x(), b2.getPos_y(), 16, 16,
+							rgbArray, 0, BLOCK_SIZE);
 				}
 			}
 		}
+		System.out.println("Drawing detected copies ");
+		printTime();
 
 		try {
 			ImageIO.write(input, "jpg", new File("output.jpg"));
@@ -346,7 +366,6 @@ public class CopyMoveRobustMatch extends ICopyMoveDetection {
 	private class Block implements Comparable<Block> {
 		private float[] values;
 		private int pos_x;
-		for (int x = 0; x < width; x++) {
 		private int pos_y;
 
 		public Block(float[] vals, int x, int y) {
@@ -408,5 +427,16 @@ public class CopyMoveRobustMatch extends ICopyMoveDetection {
 	public void abort() {
 		// TODO Auto-generated method stub
 
+	}
+
+	private long oldtime = 0;
+
+	private void printTime() {
+		if (oldtime != 0) {
+			System.out
+					.println((Calendar.getInstance().getTimeInMillis() - oldtime)
+							/ 1000.0f + "s");
+		}
+		oldtime = Calendar.getInstance().getTimeInMillis();
 	}
 }
