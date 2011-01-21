@@ -14,7 +14,7 @@ public final class Event {
 		/**
 		 * In this case an error occurred. What data is is undefined.
 		 */
-		FILE_NOT_FOUND
+		ERROR;
 	}
 
 	private Object data;
