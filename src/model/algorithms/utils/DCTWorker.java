@@ -5,8 +5,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class DCTWorker extends Observable implements Runnable {
 
-
-	
 	private ConcurrentLinkedQueue<Integer> queue;
 	private int width;
 	private float[] image;
@@ -45,33 +43,33 @@ public class DCTWorker extends Observable implements Runnable {
 		int bsize = DCTWorkerpool.BLOCK_SIZE;
 		float dct[] = new float[bsize * bsize];
 		float tmp[] = new float[bsize * bsize];
+		float f;
 
 		for (int y = 0; y < bsize; y++) {
 			for (int x = 0; x < bsize; x++) {
-				tmp[y * bsize + x] = 0.0f;
+				f = 0;
 				for (int i = 0; i < bsize; i++) {
-					tmp[y * bsize + x] += DCTWorkerpool.DCT[y * bsize + i]
+					f += DCTWorkerpool.DCT[y * bsize + i]
 							* image[(offs_y + i) * width + offs_x + x];
 				}
+				tmp[y * bsize + x] = f;
 			}
 		}
 
 		for (int y = 0; y < bsize; y++) {
 			for (int x = 0; x < bsize; x++) {
-				dct[y * bsize + x] = 0.0f;
+				f = 0;
 				for (int i = 0; i < bsize; i++) {
-					dct[y * bsize + x] += tmp[y * bsize + i]
-							* DCTWorkerpool.DCT[i * bsize + x];
+					f += tmp[y * bsize + i] * DCTWorkerpool.DCT[i * bsize + x];
 				}
 
 				// Quantise the dct coefficient
-				dct[y * bsize + x] = dct[y * bsize + x]
+				dct[y * bsize + x] = f
 						/ (DCTWorkerpool.QUANT[y * bsize + x] * quality);
 			}
 		}
 
 		return dct;
 	}
-	
 
 }

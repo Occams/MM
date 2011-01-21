@@ -16,9 +16,6 @@ import model.algorithms.utils.DCTWorkerpool;
 
 import com.sun.xml.internal.fastinfoset.tools.PrintTable;
 
-import edu.emory.mathcs.jtransforms.dct.FloatDCT_1D;
-import edu.emory.mathcs.jtransforms.dct.FloatDCT_2D;
-
 /**
  * @author huber
  * 
@@ -28,7 +25,7 @@ public class CopyMoveRobustMatch extends ICopyMoveDetection {
 		ICopyMoveDetection d = new CopyMoveRobustMatch();
 		try {
 			d.detect(ImageIO
-					.read(new File("Testbilder/EncampmentSelfTamp.bmp")), 0.5f,
+					.read(new File("Testbilder/lena512.bmp")), 0.5f,
 					10, null);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -66,7 +63,8 @@ public class CopyMoveRobustMatch extends ICopyMoveDetection {
 		/*
 		 * Calculate the dcts of each block...
 		 */
-		DCTWorkerpool pool = new DCTWorkerpool(grayscale, width, height, quality, 4);
+		DCTWorkerpool pool = new DCTWorkerpool(grayscale, width, height,
+				quality, 4);
 		List<Block> dcts = pool.getResult();
 		System.out.println("DCTs: ");
 		printTime();
@@ -108,7 +106,8 @@ public class CopyMoveRobustMatch extends ICopyMoveDetection {
 		System.out.println("Shift Vectors: ");
 		printTime();
 
-		int rgbArray[] = new int[DCTWorkerpool.BLOCK_SIZE * DCTWorkerpool.BLOCK_SIZE];
+		int rgbArray[] = new int[DCTWorkerpool.BLOCK_SIZE
+				* DCTWorkerpool.BLOCK_SIZE];
 		/*
 		 * Mark the detected copies...
 		 */
@@ -158,7 +157,6 @@ public class CopyMoveRobustMatch extends ICopyMoveDetection {
 		return true;
 	}
 
-
 	@Override
 	public void abort() {
 		// TODO Auto-generated method stub
@@ -166,6 +164,7 @@ public class CopyMoveRobustMatch extends ICopyMoveDetection {
 	}
 
 	private long oldtime = 0;
+
 	private void printTime() {
 		if (oldtime != 0) {
 			System.out
@@ -174,10 +173,10 @@ public class CopyMoveRobustMatch extends ICopyMoveDetection {
 		}
 		oldtime = Calendar.getInstance().getTimeInMillis();
 	}
-	
+
 	private class DCTWorker extends Thread {
 		public void run() {
-			
+
 		}
 	}
 }
