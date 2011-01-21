@@ -123,28 +123,28 @@ public class View extends JFrame implements Observer {
 		menubar.add(file);
 		panel.getLog().append("Application started\n");
 	}
-	
+
 	private void loadImage(File file) {
 		try {
 			BufferedImage i = ImageIO.read(file);
-			panel.getLog().append("Successfully loaded "+file.getName()+"\n");
+			panel.getLog().append(
+					"Successfully loaded " + file.getName() + "\n");
 			panel.getImgPanel().setImage(i);
 			panel.getStart().setEnabled(true);
 		} catch (IOException e) {
 			panel.getLog().append("Error: Could not load image file\n");
 		}
 	}
-	
 
 	@Override
 	public void update(Observable arg0, Object o) {
 		if (o instanceof Result) {
-			
+
 		}
 	}
-	
+
 	public class ViewPanel extends JPanel {
-		
+
 		private JPanel buttonPanel;
 		private ImagePanel imagePanel;
 		private JButton start, abort;
@@ -152,12 +152,12 @@ public class View extends JFrame implements Observer {
 		private JTextArea log;
 		private ICopyMoveDetection algo;
 		private static final long serialVersionUID = 1L;
-		
+
 		public ViewPanel() {
 			super();
 			init();
 		}
-		
+
 		private void init() {
 			setBackground(Color.GRAY);
 			setLayout(new BorderLayout());
@@ -172,8 +172,9 @@ public class View extends JFrame implements Observer {
 			add(scrollP,BorderLayout.NORTH);
 			add(imagePanel,BorderLayout.CENTER);
 			add(buttonPanel,BorderLayout.SOUTH);
+
 		}
-		
+
 		public ImagePanel getImgPanel() {
 			return imagePanel;
 		}
@@ -189,7 +190,7 @@ public class View extends JFrame implements Observer {
 		public void setLog(JTextArea log) {
 			this.log = log;
 		}
-		
+
 		public JSpinner getQuality() {
 			return quality;
 		}
@@ -211,19 +212,20 @@ public class View extends JFrame implements Observer {
 			start = new JButton("Start");
 			start.setEnabled(false);
 			start.addActionListener(new ActionListener() {
-				
+
 				@Override
 				public void actionPerformed(ActionEvent e) {
 					abort.setEnabled(true);
 					start.setEnabled(false);
-					algo.detect(imagePanel.getImage(), (Float) quality.getValue(), (Integer) threshold.getValue(), null);
-					
+					algo.detect(imagePanel.getImage(), (Float) quality
+							.getValue(), (Integer) threshold.getValue(), null);
+
 				}
 			});
 			abort = new JButton("Abort");
 			abort.setEnabled(false);
 			abort.addActionListener(new ActionListener() {
-				
+
 				@Override
 				public void actionPerformed(ActionEvent e) {
 					algo.abort();
@@ -231,7 +233,8 @@ public class View extends JFrame implements Observer {
 				}
 			});
 			quality = new JSpinner(new SpinnerNumberModel(0.5f, 0f, 1f, 0.05f));
-			quality.setToolTipText("Quality setting used to compute DCT coefficients");
+			quality
+					.setToolTipText("Quality setting used to compute DCT coefficients");
 			threshold = new JSpinner(new SpinnerNumberModel(1, 1, 20, 1));
 			quality.setToolTipText("Threshold setting used by the algorithm");
 			JLabel qualityL = new JLabel("Quality [0..1]:");
@@ -245,8 +248,7 @@ public class View extends JFrame implements Observer {
 			buttonPanel.add(thresholdL);
 			buttonPanel.add(threshold);
 		}
-		
-		
+
 		public JButton getStart() {
 			return start;
 		}
@@ -262,20 +264,16 @@ public class View extends JFrame implements Observer {
 		public void setAbort(JButton abort) {
 			this.abort = abort;
 		}
-		
+
 		public class ImagePanel extends JPanel {
 			private static final long serialVersionUID = 1L;
 			private BufferedImage image = null;
-			AffineTransform scaleTransform = new AffineTransform();
-			AffineTransformOp scaleOp = new AffineTransformOp(
-			        scaleTransform, AffineTransformOp.TYPE_BILINEAR);
-			
 			public ImagePanel() {
 				super();
 				setBackground(Color.BLACK);
 				setVisible(true);
 			}
-			
+
 			public void paint(Graphics g) {
 				g.setColor(Color.DARK_GRAY);
 				g.fillRect(0, 0, getWidth(), getHeight());
@@ -302,7 +300,7 @@ public class View extends JFrame implements Observer {
 			public BufferedImage getImage() {
 				return image;
 			}
-			
+
 		}
 
 	}
