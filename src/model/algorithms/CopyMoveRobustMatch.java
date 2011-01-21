@@ -9,6 +9,8 @@ import java.util.List;
 
 import javax.imageio.ImageIO;
 
+import edu.emory.mathcs.jtransforms.dct.FloatDCT_2D;
+
 /**
  * @author huber
  * 
@@ -179,8 +181,9 @@ public class CopyMoveRobustMatch extends ICopyMoveDetection {
 	public static void main(String[] args) {
 		ICopyMoveDetection d = new CopyMoveRobustMatch();
 		try {
-			d.detect(ImageIO.read(new File("EncampmentSelfTamp.bmp")), 1f, 30,
-					null);
+			d.detect(ImageIO
+					.read(new File("Testbilder/EncampmentSelfTamp.bmp")), 0.5f,
+					10, null);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -208,19 +211,19 @@ public class CopyMoveRobustMatch extends ICopyMoveDetection {
 		for (int y = 0; y < height; y++) {
 			for (int x = 0; x < width; x++) {
 				int pixel = input.getRGB(x, y);
-				grayscale[y * BLOCK_SIZE + x] = (float) (((pixel >> 16) & 0xff)
+				grayscale[y * width + x] = (float) (((pixel >> 16) & 0xff)
 						* 0.299 + ((pixel >> 8) & 0xff) * 0.587 + ((pixel) & 0xff) * 0.114);
 			}
 		}
 
 		/*
-		 * reshold; private JTextArea log; Calculate the dcts of each block...
+		 * Calculate the dcts of each block...
 		 */
 		List<Block> dcts = new ArrayList<Block>(blockCount_x * blockCount_y);
 		for (int y = 0; y < blockCount_y; y++) {
 			for (int x = 0; x < blockCount_x; x++) {
-				dcts.add(new Block(dct(x * BLOCK_SIZE, y * BLOCK_SIZE,
-						grayscale, quality), x, y));
+				Block b = new Block(dct(x, y, width, grayscale, quality), x, y);
+				dcts.add(b);
 			}
 		}
 
@@ -256,15 +259,6 @@ public class CopyMoveRobustMatch extends ICopyMoveDetection {
 				shiftVectors[sy * width + sx]++;
 			}
 		}
-
-		/*
-		 * Debug: Find the shiftvectors that are bigger than the threshold...
-		 * 
-		 * for (int y = 0; y < width; y++) { for (int x = 0; x < height * 2;
-		 * x++) { if (shiftVectors[y * width + x] > threshold) {
-		 * System.out.println("Shift Vector at (" + x + ", " + y + ") is " +
-		 * shiftVectors[y * width + x]); } } }
-		 */
 
 		/*
 		 * Mark the detected copies...
@@ -317,7 +311,8 @@ public class CopyMoveRobustMatch extends ICopyMoveDetection {
 	 * @param offs_x
 	 * @param offs_y
 	 */
-	private float[] dct(int offs_x, int offs_y, float[] image, float quality) {
+	private float[] dct(int offs_x, int offs_y, int width, float[] image,
+			float quality) {
 		float dct[] = new float[BLOCK_SIZE * BLOCK_SIZE];
 		float tmp[] = new float[BLOCK_SIZE * BLOCK_SIZE];
 
@@ -326,7 +321,7 @@ public class CopyMoveRobustMatch extends ICopyMoveDetection {
 				tmp[y * BLOCK_SIZE + x] = 0.0f;
 				for (int i = 0; i < BLOCK_SIZE; i++) {
 					tmp[y * BLOCK_SIZE + x] += DCT[y * BLOCK_SIZE + i]
-							* image[i * BLOCK_SIZE + x];
+							* image[(offs_y + i) * width + offs_x + x];
 				}
 			}
 		}
@@ -341,7 +336,7 @@ public class CopyMoveRobustMatch extends ICopyMoveDetection {
 
 				// Quantise the dct coefficient
 				dct[y * BLOCK_SIZE + x] = dct[y * BLOCK_SIZE + x]
-						/ (QUANT[y * BLOCK_SIZE + x]);
+						/ (QUANT[y * BLOCK_SIZE + x] * quality);
 			}
 		}
 
@@ -351,6 +346,7 @@ public class CopyMoveRobustMatch extends ICopyMoveDetection {
 	private class Block implements Comparable<Block> {
 		private float[] values;
 		private int pos_x;
+		for (int x = 0; x < width; x++) {
 		private int pos_y;
 
 		public Block(float[] vals, int x, int y) {
@@ -396,6 +392,15 @@ public class CopyMoveRobustMatch extends ICopyMoveDetection {
 				}
 			}
 			return 0;
+		}
+
+		public String toString() {
+			StringBuilder b = new StringBuilder();
+			for (float f : getValues()) {
+				b.append(f);
+				b.append(",");
+			}
+			return b.toString();
 		}
 	}
 
