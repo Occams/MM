@@ -4,7 +4,7 @@ import java.awt.image.BufferedImage;
 
 public class CopyMoveRobustMatch implements ICopyMoveDetection {
 
-	private static final float QUANT[] = new float[] { 40.0f, 27.5f, 25.0f,
+	private static final float QUANT[] = new float[] { 32.0f, 27.5f, 25.0f,
 			40.0f, 60.0f, 100.0f, 127.5f, 152.5f, 152.5f, 0.0f, 0.0f, 0.0f,
 			0.0f, 0.0f, 0.0f, 0.0f, 30.0f, 30.0f, 35.0f, 47.5f, 65.0f, 145.0f,
 			150.0f, 137.5f, 0.0f, 152.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,

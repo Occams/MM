@@ -1,7 +1,9 @@
 #!/bin/ruby
 require 'matrix'
 
-jpegmatrix = [[16,11,10,16,24,40,51,61],
+#The first value is later on not scaled by 2.5, but only by 2.. So the value at
+# 0,0 is in this matrix (originaly 16) divided by 2.5 and that multiplied by 2
+jpegmatrix = [[12.8,11,10,16,24,40,51,61],
 [12,12,14,19,26,58,60,55],
 [14,13,16,24,40,57,69,56],
 [14,17,22,29,51,87,80,62],
