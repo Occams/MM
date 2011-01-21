@@ -1,6 +1,12 @@
 package view;
 
+import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.GridLayout;
+import java.awt.Image;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
@@ -11,15 +17,24 @@ import java.util.Observable;
 import java.util.Observer;
 
 import javax.imageio.ImageIO;
+import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
+import javax.swing.JSpinner;
+import javax.swing.JTextArea;
+import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
+
+import model.Event.Result;
+import model.algorithms.CopyMoveRobustMatch;
+import model.algorithms.ICopyMoveDetection;
 
 public class View extends JFrame implements Observer {
 
@@ -31,7 +46,7 @@ public class View extends JFrame implements Observer {
 	private ViewPanel panel;
 	private JMenuBar menubar;
 	private JFileChooser chooser;
-	private File image;
+	private ICopyMoveDetection algo = new CopyMoveRobustMatch();
 
 	/**
 	 * @param args
@@ -48,6 +63,7 @@ public class View extends JFrame implements Observer {
 
 	public View() {
 		super();
+		algo.addObserver(this);
 		setVisible(true);
 		setTitle("Copy-Move Robust Match Algorithm");
 		setSize(800, 600);
@@ -70,8 +86,8 @@ public class View extends JFrame implements Observer {
 		JMenu file = new JMenu("File");
 		file.setMnemonic(KeyEvent.VK_F);
 		chooser = new JFileChooser();
-		chooser.setFileFilter(new FileNameExtensionFilter("JPEG, GIF, BMP",
-				"jpg", "jpeg", "gif", "bmp"));
+		chooser.setFileFilter(new FileNameExtensionFilter(
+				"JPEG, GIF, BMP, PNG", "jpg", "jpeg", "gif", "bmp", "png"));
 		JMenuItem exit = new JMenuItem("Exit");
 		exit.setMnemonic(KeyEvent.VK_C);
 		exit.setToolTipText("Exit application");
@@ -92,8 +108,7 @@ public class View extends JFrame implements Observer {
 			public void actionPerformed(ActionEvent arg0) {
 				int returnVal = chooser.showOpenDialog(View.this);
 				if (returnVal == JFileChooser.APPROVE_OPTION) {
-					image = chooser.getSelectedFile();
-					loadImage();
+					loadImage(chooser.getSelectedFile());
 				}
 			}
 		});
@@ -104,21 +119,173 @@ public class View extends JFrame implements Observer {
 		menubar.add(file);
 		panel.getLog().append("Application started\n");
 	}
-	
-	private void loadImage() {
+
+	private void loadImage(File file) {
 		try {
-			BufferedImage i = ImageIO.read(image);
-			panel.getLog().append("Successfully loaded "+image.getName()+"\n");
+			BufferedImage i = ImageIO.read(file);
+			panel.getLog().append(
+					"Successfully loaded " + file.getName() + "\n");
 			panel.getImgPanel().setImage(i);
 			panel.getStart().setEnabled(true);
 		} catch (IOException e) {
 			panel.getLog().append("Error: Could not load image file\n");
 		}
 	}
-	
 
 	@Override
-	public void update(Observable arg0, Object arg1) {
+	public void update(Observable arg0, Object o) {
+		if (o instanceof Result) {
+
+		}
+	}
+
+	public class ViewPanel extends JPanel {
+
+		private JPanel buttonPanel;
+		private ImagePanel imagePanel;
+		private JButton start, abort;
+		private JSpinner quality, threshold;
+		private JTextArea log;
+		private ICopyMoveDetection algo;
+		private static final long serialVersionUID = 1L;
+
+		public ViewPanel() {
+			super();
+			init();
+		}
+
+		private void init() {
+			setBackground(Color.GRAY);
+			setLayout(new BorderLayout());
+			initButtonPanel();
+			log = new JTextArea();
+			log.setAutoscrolls(true);
+			log.setEditable(false);
+			log.setRows(5);
+			log.setMargin(new Insets(5, 10, 5, 10));
+			imagePanel = new ImagePanel();
+			add(log, BorderLayout.NORTH);
+			add(imagePanel, BorderLayout.CENTER);
+			add(buttonPanel, BorderLayout.SOUTH);
+
+		}
+
+		public ImagePanel getImgPanel() {
+			return imagePanel;
+		}
+
+		public void setImgPanel(ImagePanel imagePanel) {
+			this.imagePanel = imagePanel;
+		}
+
+		public JTextArea getLog() {
+			return log;
+		}
+
+		public void setLog(JTextArea log) {
+			this.log = log;
+		}
+
+		public JSpinner getQuality() {
+			return quality;
+		}
+
+		public void setQuality(JSpinner quality) {
+			this.quality = quality;
+		}
+
+		public JSpinner getThreshold() {
+			return threshold;
+		}
+
+		public void setThreshold(JSpinner threshold) {
+			this.threshold = threshold;
+		}
+
+		private void initButtonPanel() {
+			buttonPanel = new JPanel(new GridLayout(1, 6));
+			start = new JButton("Start");
+			start.setEnabled(false);
+			start.addActionListener(new ActionListener() {
+
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					abort.setEnabled(true);
+					start.setEnabled(false);
+					algo.detect(imagePanel.getImage(), (Float) quality
+							.getValue(), (Integer) threshold.getValue(), null);
+
+				}
+			});
+			abort = new JButton("Abort");
+			abort.setEnabled(false);
+			abort.addActionListener(new ActionListener() {
+
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					algo.abort();
+					abort.setEnabled(false);
+				}
+			});
+			quality = new JSpinner(new SpinnerNumberModel(0.5f, 0f, 1f, 0.05f));
+			quality
+					.setToolTipText("Quality setting used to compute DCT coefficients");
+			threshold = new JSpinner(new SpinnerNumberModel(1, 1, 20, 1));
+			quality.setToolTipText("Threshold setting used by the algorithm");
+			JLabel qualityL = new JLabel("Quality [0..1]:");
+			qualityL.setHorizontalAlignment(JLabel.CENTER);
+			JLabel thresholdL = new JLabel("Threshold [1..20]:");
+			thresholdL.setHorizontalAlignment(JLabel.CENTER);
+			buttonPanel.add(start);
+			buttonPanel.add(abort);
+			buttonPanel.add(qualityL);
+			buttonPanel.add(quality);
+			buttonPanel.add(thresholdL);
+			buttonPanel.add(threshold);
+		}
+
+		public JButton getStart() {
+			return start;
+		}
+
+		public void setStart(JButton start) {
+			this.start = start;
+		}
+
+		public JButton getAbort() {
+			return abort;
+		}
+
+		public void setAbort(JButton abort) {
+			this.abort = abort;
+		}
+
+		public class ImagePanel extends JPanel {
+			private static final long serialVersionUID = 1L;
+			private BufferedImage image = null;
+
+			public ImagePanel() {
+				super();
+			}
+
+			public void paint(Graphics g) {
+				if (image != null) {
+					image = (BufferedImage) image.getScaledInstance(getWidth(),
+							getHeight(), Image.SCALE_FAST);
+					g.drawImage(image, 0, 0, null);
+				}
+			}
+
+			public void setImage(BufferedImage image) {
+				this.image = image;
+				repaint();
+			}
+
+			public BufferedImage getImage() {
+				return image;
+			}
+
+		}
 
 	}
 }

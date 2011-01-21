@@ -1,5 +1,6 @@
 package model;
 
+import java.awt.Image;
 import java.awt.image.BufferedImage;
 
 public final class Event {
@@ -10,6 +11,8 @@ public final class Event {
 		 * the regions that were detected as copied.
 		 */
 		COPY_MOVE_DETECTION_FINISHED,
+		
+		ABORT,
 
 		/**
 		 * In this case an error occurred. What data is is undefined.
@@ -17,28 +20,59 @@ public final class Event {
 		ERROR;
 	}
 
-	private Object data;
+	private Result result;
 	private EventType type;
 
-	public Object getData() {
-		return data;
+	public class Result {
+		private int time;
+		private Image blocks, vectors;
+		
+		public Result(int time, Image blocks,Image vectors) {
+			this.time = time;
+			this.blocks = blocks;
+			this.vectors = vectors;
+		}
+
+		public int getTime() {
+			return time;
+		}
+
+		public void setTime(int time) {
+			this.time = time;
+		}
+
+		public Image getBlocks() {
+			return blocks;
+		}
+
+		public void setBlocks(Image blocks) {
+			this.blocks = blocks;
+		}
+
+		public Image getVectors() {
+			return vectors;
+		}
+
+		public void setVectors(Image vectors) {
+			this.vectors = vectors;
+		}
+		
 	}
 
-	public void setData(Object data) {
-		this.data = data;
+	public void setResult(Result result) {
+		this.result = result;
 	}
 
-	public EventType getType() {
-		return type;
+	public Result getResult() {
+		return result;
 	}
 
 	public void setType(EventType type) {
 		this.type = type;
 	}
 
-	public Event(EventType type, Object data) {
-		this.type = type;
-		this.data = data;
+	public EventType getType() {
+		return type;
 	}
 
 }
