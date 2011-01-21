@@ -4,12 +4,16 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.GridLayout;
 import java.awt.Image;
 import java.awt.Insets;
+import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
+import java.awt.geom.AffineTransform;
+import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -25,17 +29,16 @@ import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.JTextArea;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
-import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 import model.Event.Result;
 import model.algorithms.CopyMoveRobustMatch;
 import model.algorithms.ICopyMoveDetection;
-import view.ViewPanel.ImagePanel;
 
 public class View extends JFrame implements Observer {
 
@@ -86,7 +89,7 @@ public class View extends JFrame implements Observer {
 		menubar = new JMenuBar();
 		JMenu file = new JMenu("File");
 		file.setMnemonic(KeyEvent.VK_F);
-		chooser = new JFileChooser();
+		chooser = new JFileChooser(new File("."));
 		chooser.setFileFilter(new FileNameExtensionFilter("JPEG, GIF, BMP, PNG",
 				"jpg", "jpeg", "gif", "bmp","png"));
 		JMenuItem exit = new JMenuItem("Exit");
@@ -160,15 +163,15 @@ public class View extends JFrame implements Observer {
 			setLayout(new BorderLayout());
 			initButtonPanel();
 			log = new JTextArea();
-			log.setAutoscrolls(true);
 			log.setEditable(false);
 			log.setRows(5);
 			log.setMargin(new Insets(5, 10, 5, 10));
+			JScrollPane scrollP = new JScrollPane(log);
+			scrollP.setAutoscrolls(true);
 			imagePanel = new ImagePanel();
-			add(log,BorderLayout.NORTH);
+			add(scrollP,BorderLayout.NORTH);
 			add(imagePanel,BorderLayout.CENTER);
 			add(buttonPanel,BorderLayout.SOUTH);
-			
 		}
 		
 		public ImagePanel getImgPanel() {
@@ -263,15 +266,31 @@ public class View extends JFrame implements Observer {
 		public class ImagePanel extends JPanel {
 			private static final long serialVersionUID = 1L;
 			private BufferedImage image = null;
+			AffineTransform scaleTransform = new AffineTransform();
+			AffineTransformOp scaleOp = new AffineTransformOp(
+			        scaleTransform, AffineTransformOp.TYPE_BILINEAR);
 			
 			public ImagePanel() {
 				super();
+				setBackground(Color.BLACK);
+				setVisible(true);
 			}
 			
 			public void paint(Graphics g) {
+				g.setColor(Color.DARK_GRAY);
+				g.fillRect(0, 0, getWidth(), getHeight());
+				
 				if(image != null) {
-					image = (BufferedImage) image.getScaledInstance(getWidth(), getHeight(), Image.SCALE_FAST);
-					g.drawImage(image,0,0,null);
+					double panelRatio = (double) getWidth() / (double)getHeight();
+					double aspectRatio = (double) image.getWidth() / (double) image.getHeight();
+					int nWidth = getWidth(), nHeight = getHeight();
+					
+					if (panelRatio < aspectRatio) {
+						nHeight = (int) (nWidth / aspectRatio);
+					} else {
+						nWidth = (int) (nHeight * aspectRatio);
+					}
+					g.drawImage(image,(getWidth()-nWidth) /2, (getHeight()-nHeight) /2,nWidth,nHeight,null);
 				}
 			}
 
