@@ -12,7 +12,7 @@ import edu.emory.mathcs.jtransforms.dct.FloatDCT_2D;
  * @author huber
  * 
  */
-public class CopyMoveRobustMatch implements ICopyMoveDetection {
+public class CopyMoveRobustMatch extends ICopyMoveDetection {
 	private static final int BLOCK_SIZE = 16;
 
 	private static final float QUANT[] = new float[] { 32.0f, 27.5f, 25.0f,
@@ -258,5 +258,11 @@ public class CopyMoveRobustMatch implements ICopyMoveDetection {
 			// TODO Auto-generated method stub
 			return 0;
 		}
+	}
+
+	@Override
+	public void abort() {
+		// TODO Auto-generated method stub
+		
 	}
 }
