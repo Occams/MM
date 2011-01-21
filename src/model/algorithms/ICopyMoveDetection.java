@@ -1,5 +1,8 @@
 package model.algorithms;
 
-public interface ICopyMoveDetection {
+import java.awt.image.BufferedImage;
 
+public interface ICopyMoveDetection {
+	public void detect(BufferedImage input, float quality, int threshold,
+			BufferedImage output);
 }
