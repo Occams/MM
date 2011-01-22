@@ -1,15 +1,19 @@
 package model;
 
-import java.awt.image.BufferedImage;
+import java.util.List;
 
 public final class Event {
 	public enum EventType {
 		/**
 		 * This type indicates that the copy move detection is finished. The
-		 * data of this event contains a {@link BufferedImage} which contains
-		 * the regions that were detected as copied.
+		 * data of this event contains a {@link List} of {@link ShiftVector}s.
 		 */
 		COPY_MOVE_DETECTION_FINISHED,
+		
+		/**
+		 * This type indicates the current progress of the workerpool. The data 
+		 */
+		PROGRESS,
 
 		/**
 		 * Indicates that the algorithm was aborted. Note: Description field of

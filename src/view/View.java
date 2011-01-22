@@ -33,6 +33,7 @@ import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
+import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.JSlider;
 import javax.swing.JSpinner;
@@ -154,8 +155,8 @@ public class View extends JFrame implements Observer {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				panel.scrollP.setVisible(debugSwitch.getState());
-				setSize(getWidth(), getHeight()+1);
-				setSize(getWidth(), getHeight()-1);
+				setSize(getWidth(), getHeight() + 1);
+				setSize(getWidth(), getHeight() - 1);
 			}
 		});
 
@@ -212,6 +213,9 @@ public class View extends JFrame implements Observer {
 
 				}
 				break;
+			case PROGRESS:
+				panel.setStatus(((Event) o).getResult().getProgress());
+				break;
 			case ABORT:
 				if (state == ViewState.ABORTING) {
 					state = ViewState.IMG_LOADED;
@@ -249,9 +253,9 @@ public class View extends JFrame implements Observer {
 	}
 
 	private void displayResult(List<ShiftVector> vectors) {
-		BufferedImage i = new BufferedImage(image.getColorModel(),
-				image.copyData(null), image.getColorModel()
-						.isAlphaPremultiplied(), null);
+		BufferedImage i = new BufferedImage(image.getColorModel(), image
+				.copyData(null), image.getColorModel().isAlphaPremultiplied(),
+				null);
 		Graphics g = i.getGraphics();
 		Color red = new Color(1, 0, 0, 0.25f);
 		Color green = new Color(0, 1, 0, 0.25f);
@@ -277,6 +281,7 @@ public class View extends JFrame implements Observer {
 		private JSlider quality, threshold;
 		private JScrollPane scrollP;
 		private JTextArea log;
+		private JProgressBar progress;
 		private ICopyMoveDetection algo;
 		private static final long serialVersionUID = 1L;
 
@@ -299,16 +304,16 @@ public class View extends JFrame implements Observer {
 			add(scrollP, BorderLayout.NORTH);
 			add(imagePanel, BorderLayout.CENTER);
 			add(buttonPanel, BorderLayout.SOUTH);
-
 		}
 
 		private void initButtonPanel() {
 			ImageIcon abortI = new ImageIcon("icons/abort.png");
 			ImageIcon startI = new ImageIcon("icons/start.png");
-			GridLayout gLayout = new GridLayout(1, 6);
+			GridLayout gLayout = new GridLayout(1, 7);
 			gLayout.setVgap(20);
 			gLayout.setHgap(0);
 			buttonPanel = new JPanel(gLayout);
+			progress = new JProgressBar(0, 100);
 			start = new JButton("Start", startI);
 			start.setEnabled(false);
 			start.addActionListener(new ActionListener() {
@@ -333,8 +338,9 @@ public class View extends JFrame implements Observer {
 						public void run() {
 							int cores = multithreading.getState() ? Runtime
 									.getRuntime().availableProcessors() : 1;
-							algo.detect(image, getQuality(),
-									threshold.getValue(), cores);
+							algo.detect(image, getQuality(), threshold
+									.getValue(), cores);
+							log.setEditable(false);
 						}
 					});
 					t.start();
@@ -356,7 +362,8 @@ public class View extends JFrame implements Observer {
 
 			quality = new JSlider(1, 100);
 			quality.setEnabled(false);
-			quality.setToolTipText("Quality setting used to compute DCT coefficients");
+			quality
+					.setToolTipText("Quality setting used to compute DCT coefficients");
 			quality.addChangeListener(new ChangeListener() {
 
 				@Override
@@ -385,10 +392,15 @@ public class View extends JFrame implements Observer {
 			buttonPanel.add(quality);
 			buttonPanel.add(thresholdL);
 			buttonPanel.add(threshold);
+			buttonPanel.add(progress);
 		}
 
 		private float getQuality() {
 			return (float) quality.getValue() / 100.0f;
+		}
+
+		private void setStatus(float val) {
+			progress.setValue((int) (val * 100));
 		}
 
 		public class ImagePanel extends JPanel {

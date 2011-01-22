@@ -8,7 +8,7 @@ import java.util.Observer;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-public class DCTWorkerpool implements Observer {
+public class DCTWorkerpool extends Observable implements Observer {
 	public static final int BLOCK_SIZE = 16;
 
 	public static final float QUANT[] = new float[] { 32.0f, 27.5f, 25.0f,
@@ -176,9 +176,23 @@ public class DCTWorkerpool implements Observer {
 	private HashMap<DCTWorker, Thread> workerMap = new HashMap<DCTWorker, Thread>();
 	private boolean aborted;
 
+	private int width;
+	private float[] image;
+	private int height;
+	private float quality;
+	private int paralellTasks;
+
 	public DCTWorkerpool(float[] input, int width, int height, float quality,
-			int paralellTasks) {
-		aborted = false;
+			int paralellTasks, Observer observer) {
+		this.addObserver(observer);
+		this.aborted = false;
+
+		this.width = width;
+		this.image = input;
+		this.height = height;
+		this.quality = quality;
+		this.paralellTasks = paralellTasks;
+
 		dct_blocks = new ArrayList<Block>((width - BLOCK_SIZE + 1)
 				* (height - BLOCK_SIZE + 1));
 
@@ -190,21 +204,23 @@ public class DCTWorkerpool implements Observer {
 				* (height - BLOCK_SIZE + 1); i++) {
 			blockNumbers.add(i);
 		}
+	}
 
+	public void start() {
 		/*
 		 * Create the threads...
 		 */
-		for (int i = 0; i < paralellTasks; i++) {
-			DCTWorker worker = new DCTWorker(blockNumbers, input, width,
+		for (int i = 0; i < this.paralellTasks; i++) {
+			DCTWorker worker = new DCTWorker(blockNumbers, image, width,
 					quality);
 			worker.addObserver(this);
-			
+
 			/*
 			 * Create the thread
 			 */
 			Thread wThread = new Thread(worker);
 			wThread.start();
-			
+
 			/*
 			 * Add to the map, so we can later on stop and join to the threads.
 			 */
@@ -227,13 +243,12 @@ public class DCTWorkerpool implements Observer {
 				entry.getKey().abort();
 				entry.getValue().join();
 			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
 		aborted = true;
 	}
-	
+
 	public boolean getAborted() {
 		return aborted;
 	}
@@ -243,6 +258,11 @@ public class DCTWorkerpool implements Observer {
 		if (arg != null && arg instanceof Block) {
 			synchronized (dct_blocks) {
 				dct_blocks.add((Block) arg);
+			}
+			if (dct_blocks.size() % width == 0) {
+				setChanged();
+				notifyObservers(new Float((float) dct_blocks.size()
+						/ (dct_blocks.size() + blockNumbers.size())));
 			}
 		}
 	}

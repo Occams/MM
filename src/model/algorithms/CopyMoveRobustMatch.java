@@ -3,6 +3,9 @@ package model.algorithms;
 import java.awt.image.BufferedImage;
 import java.util.Collections;
 import java.util.List;
+import java.util.Observable;
+import java.util.Observer;
+
 import model.Event;
 import model.Result;
 import model.ShiftVector;
@@ -17,7 +20,7 @@ import model.algorithms.utils.DCTWorkerpool;
  *         copy-move changes of an image.
  * 
  */
-public class CopyMoveRobustMatch extends ICopyMoveDetection {
+public class CopyMoveRobustMatch extends ICopyMoveDetection implements Observer {
 	private DCTWorkerpool workerpool;
 
 	@Override
@@ -70,12 +73,13 @@ public class CopyMoveRobustMatch extends ICopyMoveDetection {
 		/*
 		 * Calculate the dcts of each block...
 		 */
-		DCTWorkerpool pool = new DCTWorkerpool(grayscale, width, height,
-				quality, threads);
-		if (pool.getAborted()) {
+		workerpool = new DCTWorkerpool(grayscale, width, height,
+				quality, threads,this);
+		workerpool.start();
+		if (workerpool.getAborted()) {
 			return;
 		}
-		List<Block> dcts = pool.getResult();
+		List<Block> dcts = workerpool.getResult();
 		setChanged();
 		notifyObservers(new Event(Event.EventType.STATUS,
 				"DCT of each block was calculated in " + takeTime() + "ms"));
@@ -188,4 +192,12 @@ public class CopyMoveRobustMatch extends ICopyMoveDetection {
 		}
 	}
 
+	@Override
+	public void update(Observable arg0, Object arg1) {
+		if (arg1 != null && arg1 instanceof Float) {
+			setChanged();
+			notifyObservers(new Event(EventType.PROGRESS, new Result(
+					(Float) arg1)));
+		}
+	}
 }

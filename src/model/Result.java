@@ -7,9 +7,14 @@ public class Result {
 	private long time;
 	private String description;
 	private List<ShiftVector> vectors;
+	private Float progress;
 
 	public Result(String desc) {
 		setDescription(desc);
+	}
+
+	public Result(Float progress) {
+		this.progress = progress;
 	}
 
 	public List<ShiftVector> getVectors() {
@@ -47,5 +52,13 @@ public class Result {
 
 	public String getDescription() {
 		return description;
+	}
+
+	public float getProgress() {
+		return progress;
+	}
+
+	public void setProgress(float progress) {
+		this.progress = progress;
 	}
 }
