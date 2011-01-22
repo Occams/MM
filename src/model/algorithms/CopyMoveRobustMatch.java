@@ -1,13 +1,8 @@
 package model.algorithms;
 
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
-import java.util.Calendar;
 import java.util.Collections;
 import java.util.List;
-import javax.imageio.ImageIO;
-
 import model.Event;
 import model.Result;
 import model.ShiftVector;
@@ -25,10 +20,6 @@ import model.algorithms.utils.DCTWorkerpool;
 public class CopyMoveRobustMatch extends ICopyMoveDetection {
 	private DCTWorkerpool workerpool;
 
-	public CopyMoveRobustMatch() {
-
-	}
-
 	@Override
 	public void abort() {
 		if (workerpool != null) {
@@ -39,6 +30,12 @@ public class CopyMoveRobustMatch extends ICopyMoveDetection {
 				"The detection was aborted successfully!"));
 	}
 
+	/**
+	 * Detects the copy-move-parts of the image with the given quality and
+	 * threshold. The method notifies different events that can be observed. At
+	 * the end an event with a {@link List} of {@link ShiftVector}s are
+	 * notified, so one knows what parts are most likely copy-moved.
+	 */
 	@Override
 	public void detect(BufferedImage input, float quality, int threshold,
 			int threads) {
