@@ -41,7 +41,6 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import model.Event;
-import model.Event.Result;
 import model.algorithms.CopyMoveRobustMatch;
 import model.algorithms.ICopyMoveDetection;
 
@@ -186,6 +185,13 @@ public class View extends JFrame implements Observer {
 		if (o instanceof Event) {
 			Event event = (Event) o;
 			switch (event.getType()) {
+			case STATUS:
+				if (state == ViewState.PROCESSING) {
+					log(event.getResult().getDescription());
+				} else {
+					log("Wrong state: "+state);
+				}
+				break;
 			case ERROR:
 				if (state == ViewState.PROCESSING) {
 					state = ViewState.IMG_LOADED;
