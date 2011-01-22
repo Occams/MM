@@ -150,8 +150,10 @@ public class CopyMoveRobustMatch extends ICopyMoveDetection {
 
 				if (shiftVectors[sy * width + sx] > threshold) {
 					event.getResult().addShiftVector(
-							new ShiftVector(b1.getPos_x(), b1.getPos_y(), sx,
-									sy, DCTWorkerpool.BLOCK_SIZE));
+							new ShiftVector(b1.getPos_x(), b1.getPos_y(), -b1
+									.getPos_x()
+									+ b2.getPos_x(), -b1.getPos_y()
+									+ b2.getPos_y(), DCTWorkerpool.BLOCK_SIZE));
 				}
 			}
 		}
