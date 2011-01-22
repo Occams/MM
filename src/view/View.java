@@ -15,6 +15,7 @@ import java.awt.event.KeyEvent;
 import java.awt.geom.AffineTransform;
 import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
+import java.awt.image.ColorModel;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
@@ -153,8 +154,8 @@ public class View extends JFrame implements Observer {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				panel.scrollP.setVisible(debugSwitch.getState());
-				repaint();
-				pack();
+				setSize(getWidth(), getHeight()+1);
+				setSize(getWidth(), getHeight()-1);
 			}
 		});
 
@@ -170,6 +171,7 @@ public class View extends JFrame implements Observer {
 
 	private void log(String m) {
 		panel.log.append("> " + m + "\n");
+		panel.log.setCaretPosition(panel.log.getDocument().getLength());
 	}
 
 	private void loadImage(File file) {
@@ -194,8 +196,6 @@ public class View extends JFrame implements Observer {
 			case STATUS:
 				if (state == ViewState.PROCESSING) {
 					log(event.getResult().getDescription());
-				} else {
-					log("Wrong state: " + state);
 				}
 				break;
 			case ERROR:
@@ -210,8 +210,6 @@ public class View extends JFrame implements Observer {
 					settings.setEnabled(true);
 					open.setEnabled(true);
 
-				} else {
-					log("Wrong state: " + state);
 				}
 				break;
 			case ABORT:
@@ -225,24 +223,20 @@ public class View extends JFrame implements Observer {
 					panel.abort.setEnabled(false);
 					settings.setEnabled(true);
 					open.setEnabled(true);
-				} else {
-					log("Wrong state: " + state);
 				}
 				break;
 			case COPY_MOVE_DETECTION_FINISHED:
 				if (state == ViewState.PROCESSING) {
-					state = ViewState.IDLE;
+					state = ViewState.IMG_LOADED;
 					log("Duration: " + event.getResult().getTime() + "ms");
 					settings.setEnabled(true);
-					panel.start.setEnabled(false);
-					panel.quality.setEnabled(false);
-					panel.threshold.setEnabled(false);
+					panel.start.setEnabled(true);
+					panel.quality.setEnabled(true);
+					panel.threshold.setEnabled(true);
 					panel.abort.setEnabled(false);
 					settings.setEnabled(true);
 					open.setEnabled(true);
 					displayResult(event.getResult().getVectors());
-				} else {
-					log("Wrong state: " + state);
 				}
 				break;
 			default:
@@ -255,9 +249,12 @@ public class View extends JFrame implements Observer {
 	}
 
 	private void displayResult(List<ShiftVector> vectors) {
-		Graphics2D g = (Graphics2D) image.getGraphics();
-		Color red = new Color(1, 0, 0, 0.5f);
-		Color green = new Color(0, 1, 0, 0.5f);
+		BufferedImage i = new BufferedImage(image.getColorModel(),
+				image.copyData(null), image.getColorModel()
+						.isAlphaPremultiplied(), null);
+		Graphics g = i.getGraphics();
+		Color red = new Color(1, 0, 0, 0.25f);
+		Color green = new Color(0, 1, 0, 0.25f);
 
 		for (ShiftVector v : vectors) {
 			g.setColor(red);
@@ -268,7 +265,7 @@ public class View extends JFrame implements Observer {
 		}
 
 		g.dispose();
-		panel.imagePanel.setImage(image);
+		panel.imagePanel.setImage(i);
 	}
 
 	public class ViewPanel extends JPanel {
