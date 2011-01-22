@@ -38,6 +38,8 @@ import javax.swing.JSpinner;
 import javax.swing.JTextArea;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -59,12 +61,25 @@ public class View extends JFrame implements Observer {
 	private BufferedImage image;
 
 	private enum ViewState {
-		IDLE,IMG_LOADED, PROCESSING, ABORTING;
+		IDLE, IMG_LOADED, PROCESSING, ABORTING;
 	}
 
 	private ViewState state = ViewState.IDLE;
 
 	public static void main(String[] args) {
+		try {
+			// Set System L&F
+			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+		} catch (UnsupportedLookAndFeelException e) {
+			// handle exception
+		} catch (ClassNotFoundException e) {
+			// handle exception
+		} catch (InstantiationException e) {
+			// handle exception
+		} catch (IllegalAccessException e) {
+			// handle exception
+		}
+
 		SwingUtilities.invokeLater(new Runnable() {
 
 			@Override
@@ -193,7 +208,7 @@ public class View extends JFrame implements Observer {
 				if (state == ViewState.PROCESSING) {
 					log(event.getResult().getDescription());
 				} else {
-					log("Wrong state: "+state);
+					log("Wrong state: " + state);
 				}
 				break;
 			case ERROR:
@@ -207,9 +222,9 @@ public class View extends JFrame implements Observer {
 					panel.abort.setEnabled(false);
 					settings.setEnabled(true);
 					open.setEnabled(true);
-					
+
 				} else {
-					log("Wrong state: "+state);
+					log("Wrong state: " + state);
 				}
 				break;
 			case ABORT:
@@ -223,14 +238,14 @@ public class View extends JFrame implements Observer {
 					panel.abort.setEnabled(false);
 					settings.setEnabled(true);
 					open.setEnabled(true);
-				}else {
-					log("Wrong state: "+state);
+				} else {
+					log("Wrong state: " + state);
 				}
 				break;
 			case COPY_MOVE_DETECTION_FINISHED:
 				if (state == ViewState.PROCESSING) {
 					state = ViewState.IDLE;
-					log("Duration: "+event.getResult().getTime() + "ms");
+					log("Duration: " + event.getResult().getTime() + "ms");
 					settings.setEnabled(true);
 					panel.start.setEnabled(false);
 					panel.quality.setEnabled(false);
@@ -239,8 +254,8 @@ public class View extends JFrame implements Observer {
 					settings.setEnabled(true);
 					open.setEnabled(true);
 					displayResult(event.getResult().getVectors());
-				}else {
-					log("Wrong state: "+state);
+				} else {
+					log("Wrong state: " + state);
 				}
 				break;
 			default:
@@ -254,14 +269,15 @@ public class View extends JFrame implements Observer {
 
 	private void displayResult(List<ShiftVector> vectors) {
 		Graphics g = image.getGraphics();
-		
+
 		for (ShiftVector v : vectors) {
 			g.setColor(Color.GREEN);
-			g.fillRect(v.getSx(),v.getSy(), v.getBs(), v.getBs());
+			g.fillRect(v.getSx(), v.getSy(), v.getBs(), v.getBs());
 			g.setColor(Color.RED);
-			g.fillRect(v.getSx() + v.getDx(),v.getSy() + v.getDy(), v.getBs(), v.getBs());
+			g.fillRect(v.getSx() + v.getDx(), v.getSy() + v.getDy(), v.getBs(),
+					v.getBs());
 		}
-		
+
 		g.dispose();
 		panel.imagePanel.setImage(image);
 	}
@@ -326,16 +342,15 @@ public class View extends JFrame implements Observer {
 							.getRuntime().availableProcessors() : 1;
 					log("Invoked algorithm with a total number of " + cores
 							+ " threads");
-					SwingUtilities.invokeLater(new Runnable() {
-
+					new Thread(new Runnable() {
 						@Override
 						public void run() {
 							int cores = multithreading.getState() ? Runtime
 									.getRuntime().availableProcessors() : 1;
-							algo.detect(image, getQuality(), threshold.getValue(),
-									cores);
+							algo.detect(image, getQuality(), threshold
+									.getValue(), cores);
 						}
-					});
+					}).start();
 				}
 			});
 			abort = new JButton("Abort", abortI);
@@ -350,10 +365,11 @@ public class View extends JFrame implements Observer {
 					log("Initiated abort");
 				}
 			});
-			
+
 			quality = new JSlider(1, 100);
 			quality.setEnabled(false);
-			quality.setToolTipText("Quality setting used to compute DCT coefficients");
+			quality
+					.setToolTipText("Quality setting used to compute DCT coefficients");
 			quality.addChangeListener(new ChangeListener() {
 
 				@Override
