@@ -41,7 +41,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
-import model.Event.Result;
+import model.Result;
 import model.algorithms.CopyMoveRobustMatch;
 import model.algorithms.ICopyMoveDetection;
 
@@ -146,7 +146,7 @@ public class View extends JFrame implements Observer {
 			}
 		});
 
-		debugSwitch = new JCheckBoxMenuItem("Show Debugwindow",debugI);
+		debugSwitch = new JCheckBoxMenuItem("Show Debugwindow", debugI);
 		debugSwitch.setState(true);
 		debugSwitch.addActionListener(new ActionListener() {
 
@@ -191,7 +191,7 @@ public class View extends JFrame implements Observer {
 		private JPanel buttonPanel;
 		private ImagePanel imagePanel;
 		private JButton start, abort;
-		private JLabel qualityL, thresholdL; 
+		private JLabel qualityL, thresholdL;
 		private JSlider quality, threshold;
 		private JScrollPane scrollP;
 		private JTextArea log;
@@ -243,7 +243,7 @@ public class View extends JFrame implements Observer {
 			gLayout.setVgap(20);
 			gLayout.setHgap(0);
 			buttonPanel = new JPanel(gLayout);
-			start = new JButton("Start",startI);
+			start = new JButton("Start", startI);
 			start.setEnabled(false);
 			start.addActionListener(new ActionListener() {
 
@@ -253,7 +253,7 @@ public class View extends JFrame implements Observer {
 					start.setEnabled(false);
 				}
 			});
-			abort = new JButton("Abort",abortI);
+			abort = new JButton("Abort", abortI);
 			abort.setEnabled(false);
 			abort.addActionListener(new ActionListener() {
 
@@ -263,23 +263,25 @@ public class View extends JFrame implements Observer {
 					abort.setEnabled(false);
 				}
 			});
-			quality = new JSlider(0,100);
-			quality.setToolTipText("Quality setting used to compute DCT coefficients");
+			quality = new JSlider(0, 100);
+			quality
+					.setToolTipText("Quality setting used to compute DCT coefficients");
 			quality.addChangeListener(new ChangeListener() {
-				
+
 				@Override
 				public void stateChanged(ChangeEvent e) {
 					float val = (float) quality.getValue() / 100.0f;
-					qualityL.setText("Quality ["+val+"]:");
+					qualityL.setText("Quality [" + val + "]:");
 				}
 			});
-			threshold = new JSlider(1,20);
+			threshold = new JSlider(1, 20);
 			threshold.setToolTipText("Threshold setting used by the algorithm");
 			threshold.addChangeListener(new ChangeListener() {
-				
+
 				@Override
 				public void stateChanged(ChangeEvent e) {
-					thresholdL.setText("Threshold ["+threshold.getValue()+"]: ");
+					thresholdL.setText("Threshold [" + threshold.getValue()
+							+ "]: ");
 				}
 			});
 			qualityL = new JLabel("Quality [0.5]:");

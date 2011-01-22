@@ -9,6 +9,7 @@ public class DCTWorker extends Observable implements Runnable {
 	private int width;
 	private float[] image;
 	private float quality;
+	private boolean abort;
 
 	public DCTWorker(ConcurrentLinkedQueue<Integer> queue, float[] input,
 			int width, float quality) {
@@ -16,10 +17,11 @@ public class DCTWorker extends Observable implements Runnable {
 		this.width = width;
 		this.quality = quality;
 		image = input;
+		abort = false;
 	}
 
 	public void run() {
-		while (!queue.isEmpty()) {
+		while (!queue.isEmpty() && !abort) {
 			int b_num = queue.poll();
 			int b_y = b_num / (width - DCTWorkerpool.BLOCK_SIZE + 1);
 			int b_x = b_num % (width - DCTWorkerpool.BLOCK_SIZE + 1);
@@ -28,6 +30,10 @@ public class DCTWorker extends Observable implements Runnable {
 			setChanged();
 			notifyObservers(new Block(matrix, b_x, b_y));
 		}
+	}
+
+	public void abort() {
+		abort = true;
 	}
 
 	/**

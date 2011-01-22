@@ -1,6 +1,5 @@
 package model;
 
-import java.awt.Image;
 import java.awt.image.BufferedImage;
 
 public final class Event {
@@ -11,11 +10,22 @@ public final class Event {
 		 * the regions that were detected as copied.
 		 */
 		COPY_MOVE_DETECTION_FINISHED,
-		
+
+		/**
+		 * Indicates that the algorithm was aborted. Note: Description field of
+		 * result is set.
+		 */
 		ABORT,
 
 		/**
-		 * In this case an error occurred. What data is is undefined.
+		 * Indicates the status of the model. Note: Description field of result
+		 * is set.
+		 */
+		STATUS,
+
+		/**
+		 * In this case an error occurred. What data is is undefined. Note:
+		 * Description field of result is set
 		 */
 		ERROR;
 	}
@@ -23,40 +33,18 @@ public final class Event {
 	private Result result;
 	private EventType type;
 
-	public class Result {
-		private int time;
-		private Image blocks, vectors;
-		
-		public Result(int time, Image blocks,Image vectors) {
-			this.time = time;
-			this.blocks = blocks;
-			this.vectors = vectors;
-		}
+	public Event(EventType type) {
+		setType(type);
+	}
 
-		public int getTime() {
-			return time;
-		}
+	public Event(EventType type, Result result) {
+		setType(type);
+		setResult(result);
+	}
 
-		public void setTime(int time) {
-			this.time = time;
-		}
-
-		public Image getBlocks() {
-			return blocks;
-		}
-
-		public void setBlocks(Image blocks) {
-			this.blocks = blocks;
-		}
-
-		public Image getVectors() {
-			return vectors;
-		}
-
-		public void setVectors(Image vectors) {
-			this.vectors = vectors;
-		}
-		
+	public Event(EventType type, String result) {
+		setType(type);
+		setResult(new Result(result));
 	}
 
 	public void setResult(Result result) {

@@ -3,46 +3,55 @@ package model.algorithms;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.ConcurrentLinkedQueue;
-
 import javax.imageio.ImageIO;
 
+import model.Event;
+import model.Result;
+import model.ShiftVector;
+import model.Event.EventType;
 import model.algorithms.utils.Block;
 import model.algorithms.utils.DCTWorkerpool;
 
-import com.sun.xml.internal.fastinfoset.tools.PrintTable;
-
 /**
- * @author huber
+ * @author Huber Bastian
+ * 
+ *         This class implements the robust match algorithm for detecting
+ *         copy-move changes of an image.
  * 
  */
 public class CopyMoveRobustMatch extends ICopyMoveDetection {
-	public static void main(String[] args) {
-		ICopyMoveDetection d = new CopyMoveRobustMatch();
-		try {
-			d.detect(ImageIO
-					.read(new File("Testbilder/lena512.bmp")), 0.5f,
-					10, 1);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
+	private DCTWorkerpool workerpool;
 
 	public CopyMoveRobustMatch() {
 
 	}
 
-	public void detect(BufferedImage input, float quality, int threshold,
-			BufferedImage output) {
-		if (!checkImage(input))
-			return;
+	@Override
+	public void abort() {
+		if (workerpool != null) {
+			workerpool.abort();
+		}
+		setChanged();
+		notifyObservers(new Event(EventType.ABORT,
+				"The detection was aborted successfully!"));
+	}
 
-		printTime();
+	@Override
+	public void detect(BufferedImage input, float quality, int threshold,
+			int threads) {
+
+		if (!checkImage(input)) {
+			setChanged();
+			notifyObservers(new Event(Event.EventType.ERROR,
+					"The image could not be processed!"));
+			return;
+		}
+
+		long start = System.currentTimeMillis();
+		takeTime();
 		int height = input.getHeight();
 		int width = input.getWidth();
 
@@ -57,24 +66,30 @@ public class CopyMoveRobustMatch extends ICopyMoveDetection {
 						* 0.299 + ((pixel >> 8) & 0xff) * 0.587 + ((pixel) & 0xff) * 0.114);
 			}
 		}
-		System.out.println("Grayscale Matrix: ");
-		printTime();
+		setChanged();
+		notifyObservers(new Event(Event.EventType.STATUS,
+				"Luminance matrix of image calculated in " + takeTime() + "ms"));
 
 		/*
 		 * Calculate the dcts of each block...
 		 */
 		DCTWorkerpool pool = new DCTWorkerpool(grayscale, width, height,
-				quality, 4);
+				quality, threads);
+		if (pool.getAborted()) {
+			return;
+		}
 		List<Block> dcts = pool.getResult();
-		System.out.println("DCTs: ");
-		printTime();
+		setChanged();
+		notifyObservers(new Event(Event.EventType.STATUS,
+				"DCT of each block was calculated in " + takeTime() + "ms"));
 
 		/*
 		 * Sort the dcts lexicographically...
 		 */
 		Collections.sort(dcts);
-		System.out.println("Sorting DCTs: ");
-		printTime();
+		setChanged();
+		notifyObservers(new Event(Event.EventType.STATUS,
+				"Lexicographically sorted all DCTs in " + takeTime() + "ms"));
 
 		/*
 		 * Collect vectors... The Shift Vector is an array double of the
@@ -103,11 +118,19 @@ public class CopyMoveRobustMatch extends ICopyMoveDetection {
 				shiftVectors[sy * width + sx]++;
 			}
 		}
-		System.out.println("Shift Vectors: ");
-		printTime();
 
-		int rgbArray[] = new int[DCTWorkerpool.BLOCK_SIZE
-				* DCTWorkerpool.BLOCK_SIZE];
+		setChanged();
+		notifyObservers(new Event(Event.EventType.STATUS,
+				"Calculated the shift vectors in " + takeTime() + "ms"));
+
+		/*
+		 * Save time that will be notified along with the result of the
+		 * shiftvectors
+		 */
+		long end = System.currentTimeMillis();
+
+		Event event = new Event(EventType.COPY_MOVE_DETECTION_FINISHED,
+				new Result(end - start));
 		/*
 		 * Mark the detected copies...
 		 */
@@ -129,23 +152,15 @@ public class CopyMoveRobustMatch extends ICopyMoveDetection {
 				sy += height;
 
 				if (shiftVectors[sy * width + sx] > threshold) {
-					input.setRGB(b1.getPos_x(), b1.getPos_y(), 16, 16,
-							rgbArray, 0, DCTWorkerpool.BLOCK_SIZE);
-					input.setRGB(b2.getPos_x(), b2.getPos_y(), 16, 16,
-							rgbArray, 0, DCTWorkerpool.BLOCK_SIZE);
+					event.getResult().addShiftVector(
+							new ShiftVector(b1.getPos_x(), b1.getPos_y(), sx,
+									sy, DCTWorkerpool.BLOCK_SIZE));
 				}
 			}
 		}
-		
-		System.out.println("Drawing detected copies ");
-		printTime();
 
-		try {
-			ImageIO.write(input, "jpg", new File("output.jpg"));
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		setChanged();
+		notifyObservers(event);
 	}
 
 	/**
@@ -155,36 +170,23 @@ public class CopyMoveRobustMatch extends ICopyMoveDetection {
 	 * @return
 	 */
 	private boolean checkImage(BufferedImage image) {
+		if (image.getWidth() < 16 || image.getHeight() < 16) {
+			return false;
+		}
 		return true;
-	}
-
-	@Override
-	public void abort() {
-		// TODO Auto-generated method stub
-
 	}
 
 	private long oldtime = 0;
 
-	private void printTime() {
+	private long takeTime() {
 		if (oldtime != 0) {
-			System.out
-					.println((Calendar.getInstance().getTimeInMillis() - oldtime)
-							/ 1000.0f + "s");
-		}
-		oldtime = Calendar.getInstance().getTimeInMillis();
-	}
+			long ret = System.currentTimeMillis() - oldtime;
+			oldtime = System.currentTimeMillis();
+			return ret;
+		} else {
 
-	private class DCTWorker extends Thread {
-		public void run() {
-
+			return -1;
 		}
 	}
 
-	@Override
-	public void detect(BufferedImage input, float quality, int threshold,
-			int threads) {
-		// TODO Auto-generated method stub
-		
-	}
 }

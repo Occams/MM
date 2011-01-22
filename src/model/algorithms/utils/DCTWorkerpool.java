@@ -1,14 +1,12 @@
 package model.algorithms.utils;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
-import java.util.Queue;
-import java.util.concurrent.BlockingQueue;
+import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.LinkedBlockingQueue;
 
 public class DCTWorkerpool implements Observer {
 	public static final int BLOCK_SIZE = 16;
@@ -175,9 +173,12 @@ public class DCTWorkerpool implements Observer {
 
 	private ConcurrentLinkedQueue<Integer> blockNumbers;
 	private List<Block> dct_blocks;
+	private HashMap<DCTWorker, Thread> workerMap;
+	private boolean aborted;
 
 	public DCTWorkerpool(float[] input, int width, int height, float quality,
 			int paralellTasks) {
+		aborted = false;
 		dct_blocks = new ArrayList<Block>((width - BLOCK_SIZE + 1)
 				* (height - BLOCK_SIZE + 1));
 
@@ -193,16 +194,24 @@ public class DCTWorkerpool implements Observer {
 		/*
 		 * Create the threads...
 		 */
-		Thread[] tlist = new Thread[paralellTasks];
 		for (int i = 0; i < paralellTasks; i++) {
 			DCTWorker worker = new DCTWorker(blockNumbers, input, width,
 					quality);
 			worker.addObserver(this);
-			tlist[i] = new Thread(worker);
-			tlist[i].start();
+			
+			/*
+			 * Create the thread
+			 */
+			Thread wThread = new Thread(worker);
+			wThread.start();
+			
+			/*
+			 * Add to the map, so we can later on stop and join to the threads.
+			 */
+			workerMap.put(worker, wThread);
 		}
 
-		for (Thread t : tlist) {
+		for (Thread t : workerMap.values()) {
 			try {
 				t.join();
 			} catch (InterruptedException e) {
@@ -210,6 +219,23 @@ public class DCTWorkerpool implements Observer {
 				e.printStackTrace();
 			}
 		}
+	}
+
+	public void abort() {
+		for (Entry<DCTWorker, Thread> entry : workerMap.entrySet()) {
+			try {
+				entry.getKey().abort();
+				entry.getValue().join();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		aborted = true;
+	}
+	
+	public boolean getAborted() {
+		return aborted;
 	}
 
 	@Override
