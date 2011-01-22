@@ -254,12 +254,15 @@ public class View extends JFrame implements Observer {
 
 	private void displayResult(List<ShiftVector> vectors) {
 		Graphics g = image.getGraphics();
-		System.out.println(vectors.size());
+		
 		for (ShiftVector v : vectors) {
-			g.setColor(Color.RED);
+			g.setColor(Color.GREEN);
 			g.fillRect(v.getSx(),v.getSy(), v.getBs(), v.getBs());
+			g.setColor(Color.RED);
 			g.fillRect(v.getSx() + v.getDx(),v.getSy() + v.getDy(), v.getBs(), v.getBs());
 		}
+		
+		g.dispose();
 		panel.imagePanel.setImage(image);
 	}
 
@@ -323,8 +326,16 @@ public class View extends JFrame implements Observer {
 							.getRuntime().availableProcessors() : 1;
 					log("Invoked algorithm with a total number of " + cores
 							+ " threads");
-					algo.detect(image, getQuality(), threshold.getValue(),
-							cores);
+					SwingUtilities.invokeLater(new Runnable() {
+
+						@Override
+						public void run() {
+							int cores = multithreading.getState() ? Runtime
+									.getRuntime().availableProcessors() : 1;
+							algo.detect(image, getQuality(), threshold.getValue(),
+									cores);
+						}
+					});
 				}
 			});
 			abort = new JButton("Abort", abortI);
