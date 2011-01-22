@@ -173,7 +173,7 @@ public class DCTWorkerpool implements Observer {
 
 	private ConcurrentLinkedQueue<Integer> blockNumbers;
 	private List<Block> dct_blocks;
-	private HashMap<DCTWorker, Thread> workerMap;
+	private HashMap<DCTWorker, Thread> workerMap = new HashMap<DCTWorker, Thread>();
 	private boolean aborted;
 
 	public DCTWorkerpool(float[] input, int width, int height, float quality,

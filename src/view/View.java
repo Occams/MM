@@ -17,6 +17,7 @@ import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
 
@@ -40,27 +41,29 @@ import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
-
-import model.Result;
+import model.Event;
+import model.ShiftVector;
 import model.algorithms.CopyMoveRobustMatch;
 import model.algorithms.ICopyMoveDetection;
 
 public class View extends JFrame implements Observer {
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
-
 	private ViewPanel panel;
 	private JMenuBar menubar;
 	private JFileChooser chooser;
-	private ICopyMoveDetection algo = new CopyMoveRobustMatch();
+	private ICopyMoveDetection algo;
 	private JCheckBoxMenuItem multithreading, debugSwitch;
+	private JMenuItem exit, open;
+	private JMenu settings;
+	private BufferedImage image;
 
-	/**
-	 * @param args
-	 */
+	private enum ViewState {
+		IDLE,IMG_LOADED, PROCESSING, ABORTING;
+	}
+
+	private ViewState state = ViewState.IDLE;
+
 	public static void main(String[] args) {
 		SwingUtilities.invokeLater(new Runnable() {
 
@@ -73,7 +76,6 @@ public class View extends JFrame implements Observer {
 
 	public View() {
 		super();
-		algo.addObserver(this);
 		setVisible(true);
 		setTitle("Copy-Move Robust Match Algorithm");
 		setSize(800, 600);
@@ -91,10 +93,6 @@ public class View extends JFrame implements Observer {
 		setJMenuBar(menubar);
 	}
 
-	private void log(String m) {
-		panel.log.append("> " + m + "\n");
-	}
-
 	private void initMBar() {
 		ImageIcon exitI = new ImageIcon("icons/exit.png");
 		ImageIcon multithreadingI = new ImageIcon("icons/settings.png");
@@ -103,12 +101,12 @@ public class View extends JFrame implements Observer {
 		menubar = new JMenuBar();
 		JMenu file = new JMenu("File");
 		file.setMnemonic(KeyEvent.VK_F);
-		JMenu settings = new JMenu("Settings");
+		settings = new JMenu("Settings");
 		file.setMnemonic(KeyEvent.VK_S);
 		chooser = new JFileChooser(new File("."));
 		chooser.setFileFilter(new FileNameExtensionFilter(
 				"JPEG, GIF, BMP, PNG", "jpg", "jpeg", "gif", "bmp", "png"));
-		JMenuItem exit = new JMenuItem("Exit", exitI);
+		exit = new JMenuItem("Exit", exitI);
 		exit.setMnemonic(KeyEvent.VK_C);
 		exit.setToolTipText("Exit application");
 		exit.addActionListener(new ActionListener() {
@@ -119,7 +117,7 @@ public class View extends JFrame implements Observer {
 			}
 		});
 
-		JMenuItem open = new JMenuItem("Open Image", openI);
+		open = new JMenuItem("Open Image", openI);
 		open.setMnemonic(KeyEvent.VK_O);
 		open.setToolTipText("Open an image file");
 		open.addActionListener(new ActionListener() {
@@ -168,12 +166,19 @@ public class View extends JFrame implements Observer {
 		log("Application started");
 	}
 
+	private void log(String m) {
+		panel.log.append("> " + m + "\n");
+	}
+
 	private void loadImage(File file) {
 		try {
-			BufferedImage i = ImageIO.read(file);
+			image = ImageIO.read(file);
 			log("Successfully loaded " + file.getName());
-			panel.getImgPanel().setImage(i);
-			panel.getStart().setEnabled(true);
+			panel.imagePanel.setImage(image);
+			panel.start.setEnabled(true);
+			panel.quality.setEnabled(true);
+			panel.threshold.setEnabled(true);
+			state = ViewState.IMG_LOADED;
 		} catch (IOException e) {
 			log("Error: Could not load image file\n");
 		}
@@ -181,9 +186,81 @@ public class View extends JFrame implements Observer {
 
 	@Override
 	public void update(Observable arg0, Object o) {
-		if (o instanceof Result) {
-
+		if (o instanceof Event) {
+			Event event = (Event) o;
+			switch (event.getType()) {
+			case STATUS:
+				if (state == ViewState.PROCESSING) {
+					log(event.getResult().getDescription());
+				} else {
+					log("Wrong state: "+state);
+				}
+				break;
+			case ERROR:
+				if (state == ViewState.PROCESSING) {
+					state = ViewState.IMG_LOADED;
+					log("An error occured during execution");
+					settings.setEnabled(true);
+					panel.start.setEnabled(true);
+					panel.quality.setEnabled(true);
+					panel.threshold.setEnabled(true);
+					panel.abort.setEnabled(false);
+					settings.setEnabled(true);
+					open.setEnabled(true);
+					
+				} else {
+					log("Wrong state: "+state);
+				}
+				break;
+			case ABORT:
+				if (state == ViewState.ABORTING) {
+					state = ViewState.IMG_LOADED;
+					log("Abort was successful");
+					settings.setEnabled(true);
+					panel.start.setEnabled(true);
+					panel.quality.setEnabled(true);
+					panel.threshold.setEnabled(true);
+					panel.abort.setEnabled(false);
+					settings.setEnabled(true);
+					open.setEnabled(true);
+				}else {
+					log("Wrong state: "+state);
+				}
+				break;
+			case COPY_MOVE_DETECTION_FINISHED:
+				if (state == ViewState.PROCESSING) {
+					state = ViewState.IDLE;
+					log("Duration: "+event.getResult().getTime() + "ms");
+					settings.setEnabled(true);
+					panel.start.setEnabled(false);
+					panel.quality.setEnabled(false);
+					panel.threshold.setEnabled(false);
+					panel.abort.setEnabled(false);
+					settings.setEnabled(true);
+					open.setEnabled(true);
+					displayResult(event.getResult().getVectors());
+				}else {
+					log("Wrong state: "+state);
+				}
+				break;
+			default:
+				log("Received unknown event type");
+				break;
+			}
+		} else {
+			log("Received a faulty notification from model");
 		}
+	}
+
+	private void displayResult(List<ShiftVector> vectors) {
+		Graphics g = image.getGraphics();
+		System.out.println(vectors.size());
+		for (ShiftVector v : vectors) {
+			g.setColor(Color.RED);
+			g.fillRect(v.getSx(),v.getSy(), v.getBs(), v.getBs());
+			g.fillRect(v.getSx() + v.getDx(),v.getSy() + v.getDy(), v.getBs(), v.getBs());
+		}
+		panel.imagePanel.setImage(image);
 	}
 
 	public class ViewPanel extends JPanel {
@@ -220,22 +297,6 @@ public class View extends JFrame implements Observer {
 
 		}
 
-		public ImagePanel getImgPanel() {
-			return imagePanel;
-		}
-
-		public void setImgPanel(ImagePanel imagePanel) {
-			this.imagePanel = imagePanel;
-		}
-
-		public JTextArea getLog() {
-			return log;
-		}
-
-		public void setLog(JTextArea log) {
-			this.log = log;
-		}
-
 		private void initButtonPanel() {
 			ImageIcon abortI = new ImageIcon("icons/abort.png");
 			ImageIcon startI = new ImageIcon("icons/start.png");
@@ -249,8 +310,21 @@ public class View extends JFrame implements Observer {
 
 				@Override
 				public void actionPerformed(ActionEvent e) {
+					state = ViewState.PROCESSING;
+					open.setEnabled(false);
+					settings.setEnabled(false);
 					abort.setEnabled(true);
 					start.setEnabled(false);
+					quality.setEnabled(false);
+					threshold.setEnabled(false);
+					algo = new CopyMoveRobustMatch();
+					algo.addObserver(View.this);
+					int cores = multithreading.getState() ? Runtime
+							.getRuntime().availableProcessors() : 1;
+					log("Invoked algorithm with a total number of " + cores
+							+ " threads");
+					algo.detect(image, getQuality(), threshold.getValue(),
+							cores);
 				}
 			});
 			abort = new JButton("Abort", abortI);
@@ -259,22 +333,25 @@ public class View extends JFrame implements Observer {
 
 				@Override
 				public void actionPerformed(ActionEvent e) {
+					state = ViewState.ABORTING;
 					algo.abort();
 					abort.setEnabled(false);
+					log("Initiated abort");
 				}
 			});
-			quality = new JSlider(0, 100);
-			quality
-					.setToolTipText("Quality setting used to compute DCT coefficients");
+			
+			quality = new JSlider(1, 100);
+			quality.setEnabled(false);
+			quality.setToolTipText("Quality setting used to compute DCT coefficients");
 			quality.addChangeListener(new ChangeListener() {
 
 				@Override
 				public void stateChanged(ChangeEvent e) {
-					float val = (float) quality.getValue() / 100.0f;
-					qualityL.setText("Quality [" + val + "]:");
+					qualityL.setText("Quality [" + getQuality() + "]:");
 				}
 			});
 			threshold = new JSlider(1, 20);
+			threshold.setEnabled(false);
 			threshold.setToolTipText("Threshold setting used by the algorithm");
 			threshold.addChangeListener(new ChangeListener() {
 
@@ -296,20 +373,8 @@ public class View extends JFrame implements Observer {
 			buttonPanel.add(threshold);
 		}
 
-		public JButton getStart() {
-			return start;
-		}
-
-		public void setStart(JButton start) {
-			this.start = start;
-		}
-
-		public JButton getAbort() {
-			return abort;
-		}
-
-		public void setAbort(JButton abort) {
-			this.abort = abort;
+		private float getQuality() {
+			return (float) quality.getValue() / 100.0f;
 		}
 
 		public class ImagePanel extends JPanel {
