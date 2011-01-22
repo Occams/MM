@@ -1,5 +1,6 @@
 package model.algorithms;
 
+import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.util.Observable;
 
