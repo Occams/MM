@@ -253,13 +253,15 @@ public class View extends JFrame implements Observer {
 	}
 
 	private void displayResult(List<ShiftVector> vectors) {
-		Graphics g = image.getGraphics();
+		Graphics2D g = (Graphics2D) image.getGraphics();
+		Color red = new Color(1,0,0, 0.5f);
+		Color green = new Color(0,1,0, 0.5f);
 		
 		for (ShiftVector v : vectors) {
-			g.setColor(Color.GREEN);
+			g.setColor(red);
 			g.fillRect(v.getSx(),v.getSy(), v.getBs(), v.getBs());
-			g.setColor(Color.RED);
-			g.fillRect(v.getSx() + v.getDx(),v.getSy() + v.getDy(), v.getBs(), v.getBs());
+			g.setColor(green);
+			g.fillRect(v.getSx() - v.getDx(),v.getSy() - v.getDy(), v.getBs(), v.getBs());
 		}
 		
 		g.dispose();
@@ -326,7 +328,7 @@ public class View extends JFrame implements Observer {
 							.getRuntime().availableProcessors() : 1;
 					log("Invoked algorithm with a total number of " + cores
 							+ " threads");
-					SwingUtilities.invokeLater(new Runnable() {
+					Thread t = new Thread(new Runnable() {
 
 						@Override
 						public void run() {
@@ -336,6 +338,7 @@ public class View extends JFrame implements Observer {
 									cores);
 						}
 					});
+					t.start();
 				}
 			});
 			abort = new JButton("Abort", abortI);
