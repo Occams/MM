@@ -263,7 +263,7 @@ public class View extends JFrame implements Observer {
 			g.setColor(red);
 			g.fillRect(v.getSx(), v.getSy(), v.getBs(), v.getBs());
 			g.setColor(green);
-			g.fillRect(v.getSx() - v.getDx(), v.getSy() - v.getDy(), v.getBs(),
+			g.fillRect(v.getSx() + v.getDx(), v.getSy() + v.getDy(), v.getBs(),
 					v.getBs());
 		}
 
