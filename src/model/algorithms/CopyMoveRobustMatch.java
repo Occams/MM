@@ -26,7 +26,7 @@ public class CopyMoveRobustMatch extends ICopyMoveDetection {
 		try {
 			d.detect(ImageIO
 					.read(new File("Testbilder/lena512.bmp")), 0.5f,
-					10, null);
+					10, 1);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -136,6 +136,7 @@ public class CopyMoveRobustMatch extends ICopyMoveDetection {
 				}
 			}
 		}
+		
 		System.out.println("Drawing detected copies ");
 		printTime();
 
@@ -178,5 +179,12 @@ public class CopyMoveRobustMatch extends ICopyMoveDetection {
 		public void run() {
 
 		}
+	}
+
+	@Override
+	public void detect(BufferedImage input, float quality, int threshold,
+			int threads) {
+		// TODO Auto-generated method stub
+		
 	}
 }

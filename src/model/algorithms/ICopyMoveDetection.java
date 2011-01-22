@@ -4,7 +4,6 @@ import java.awt.image.BufferedImage;
 import java.util.Observable;
 
 public abstract class ICopyMoveDetection extends Observable {
-	public abstract void detect(BufferedImage input, float quality, int threshold,
-			BufferedImage output);
+	public abstract void detect(BufferedImage input, float quality, int threshold, int threads);
 	public abstract void abort();
 }
