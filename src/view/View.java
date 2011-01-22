@@ -40,7 +40,6 @@ import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
-
 import model.Event;
 import model.Event.Result;
 import model.algorithms.CopyMoveRobustMatch;
@@ -313,6 +312,7 @@ public class View extends JFrame implements Observer {
 					log("Initiated abort");
 				}
 			});
+			
 			quality = new JSlider(1, 100);
 			quality.setToolTipText("Quality setting used to compute DCT coefficients");
 			quality.addChangeListener(new ChangeListener() {
