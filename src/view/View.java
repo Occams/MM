@@ -17,6 +17,7 @@ import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
 
@@ -41,6 +42,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import model.Event;
+import model.ShiftVector;
 import model.algorithms.CopyMoveRobustMatch;
 import model.algorithms.ICopyMoveDetection;
 
@@ -174,6 +176,8 @@ public class View extends JFrame implements Observer {
 			log("Successfully loaded " + file.getName());
 			panel.imagePanel.setImage(image);
 			panel.start.setEnabled(true);
+			panel.quality.setEnabled(true);
+			panel.threshold.setEnabled(true);
 			state = ViewState.IMG_LOADED;
 		} catch (IOException e) {
 			log("Error: Could not load image file\n");
@@ -225,10 +229,16 @@ public class View extends JFrame implements Observer {
 				break;
 			case COPY_MOVE_DETECTION_FINISHED:
 				if (state == ViewState.PROCESSING) {
-//					input.setRGB(b1.getPos_x(), b1.getPos_y(), 16, 16,
-//							rgbArray, 0, DCTWorkerpool.BLOCK_SIZE);
-//					input.setRGB(b2.getPos_x(), b2.getPos_y(), 16, 16,
-//							rgbArray, 0, DCTWorkerpool.BLOCK_SIZE);
+					state = ViewState.IDLE;
+					log("Duration: "+event.getResult().getTime() + "ms");
+					settings.setEnabled(true);
+					panel.start.setEnabled(false);
+					panel.quality.setEnabled(false);
+					panel.threshold.setEnabled(false);
+					panel.abort.setEnabled(false);
+					settings.setEnabled(true);
+					open.setEnabled(true);
+					displayResult(event.getResult().getVectors());
 				}else {
 					log("Wrong state: "+state);
 				}
@@ -240,6 +250,17 @@ public class View extends JFrame implements Observer {
 		} else {
 			log("Received a faulty notification from model");
 		}
+	}
+
+	private void displayResult(List<ShiftVector> vectors) {
+		Graphics g = image.getGraphics();
+		System.out.println(vectors.size());
+		for (ShiftVector v : vectors) {
+			g.setColor(Color.RED);
+			g.fillRect(v.getSx(),v.getSy(), v.getBs(), v.getBs());
+			g.fillRect(v.getSx() + v.getDx(),v.getSy() + v.getDy(), v.getBs(), v.getBs());
+		}
+		panel.imagePanel.setImage(image);
 	}
 
 	public class ViewPanel extends JPanel {
@@ -320,6 +341,7 @@ public class View extends JFrame implements Observer {
 			});
 			
 			quality = new JSlider(1, 100);
+			quality.setEnabled(false);
 			quality.setToolTipText("Quality setting used to compute DCT coefficients");
 			quality.addChangeListener(new ChangeListener() {
 
@@ -329,6 +351,7 @@ public class View extends JFrame implements Observer {
 				}
 			});
 			threshold = new JSlider(1, 20);
+			threshold.setEnabled(false);
 			threshold.setToolTipText("Threshold setting used by the algorithm");
 			threshold.addChangeListener(new ChangeListener() {
 

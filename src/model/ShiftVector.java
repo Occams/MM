@@ -8,24 +8,64 @@ public class ShiftVector {
 	/**
 	 * Start point x.
 	 */
-	public int sx;
+	private int sx;
 	/**
 	 * Start point y.
 	 */
-	public int sy;
+	private int sy;
 	/**
 	 * Delta x.
 	 */
-	public int dx;
+	private int dx;
 	/**
 	 * Delta y.
 	 */
-	public int dy;
+	private int dy;
 
 	/**
 	 * Block width and height.
 	 */
-	public int bs;
+	private int bs;
+
+	public int getSx() {
+		return sx;
+	}
+
+	public void setSx(int sx) {
+		this.sx = sx;
+	}
+
+	public int getSy() {
+		return sy;
+	}
+
+	public void setSy(int sy) {
+		this.sy = sy;
+	}
+
+	public int getDx() {
+		return dx;
+	}
+
+	public void setDx(int dx) {
+		this.dx = dx;
+	}
+
+	public int getDy() {
+		return dy;
+	}
+
+	public void setDy(int dy) {
+		this.dy = dy;
+	}
+
+	public int getBs() {
+		return bs;
+	}
+
+	public void setBs(int bs) {
+		this.bs = bs;
+	}
 
 	public ShiftVector(int sx, int sy, int dx, int dy, int bs) {
 		this.sx = sx;

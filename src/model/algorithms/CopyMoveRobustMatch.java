@@ -184,7 +184,7 @@ public class CopyMoveRobustMatch extends ICopyMoveDetection {
 			oldtime = System.currentTimeMillis();
 			return ret;
 		} else {
-
+			oldtime = System.currentTimeMillis();
 			return -1;
 		}
 	}

@@ -6,10 +6,14 @@ import java.util.List;
 public class Result {
 	private long time;
 	private String description;
-	private List<ShiftVector> vectors;
+	private List<ShiftVector> vectors = new LinkedList<ShiftVector>();
 
 	public Result(String desc) {
 		setDescription(desc);
+	}
+
+	public List<ShiftVector> getVectors() {
+		return vectors;
 	}
 
 	public Result(String desc, long time) {
