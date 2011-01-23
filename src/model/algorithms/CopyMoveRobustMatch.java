@@ -58,12 +58,12 @@ public class CopyMoveRobustMatch extends ICopyMoveDetection implements Observer 
 		/*
 		 * The image can be processed. First calc grayscale image...
 		 */
-		float[] grayscale = new float[width * height];
+		int[] grayscale = new int[width * height];
 		for (int y = 0; y < height; y++) {
 			for (int x = 0; x < width; x++) {
 				int pixel = input.getRGB(x, y);
-				grayscale[y * width + x] = (float) (((pixel >> 16) & 0xff)
-						* 0.299 + ((pixel >> 8) & 0xff) * 0.587 + ((pixel) & 0xff) * 0.114);
+				grayscale[y * width + x] = (int) (((pixel >> 16) & 0xff)
+						* 0.299 + ((pixel >> 8) & 0xff) * 0.587 + ((pixel) & 0xff) * 0.114) - 128;
 			}
 		}
 		
@@ -144,7 +144,6 @@ public class CopyMoveRobustMatch extends ICopyMoveDetection implements Observer 
 			if (b1.compareTo(b2) == 0) {
 				int sx = b1.getPos_x() - b2.getPos_x();
 				int sy = b1.getPos_y() - b2.getPos_y();
-
 				if (sx < 0) {
 					sx = -sx;
 					sy = -sy;

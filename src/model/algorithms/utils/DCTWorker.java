@@ -7,11 +7,11 @@ public class DCTWorker extends Observable implements Runnable {
 
 	private ConcurrentLinkedQueue<Integer> queue;
 	private int width;
-	private float[] image;
+	private int[] image;
 	private float quality;
 	private boolean abort;
 
-	public DCTWorker(ConcurrentLinkedQueue<Integer> queue, float[] input,
+	public DCTWorker(ConcurrentLinkedQueue<Integer> queue, int[] input,
 			int width, float quality) {
 		this.queue = queue;
 		this.width = width;
@@ -70,10 +70,11 @@ public class DCTWorker extends Observable implements Runnable {
 				}
 
 				// Quantise the dct coefficient
-				dct[y * bsize + x] = f
-						/ (DCTWorkerpool.QUANT[y * bsize + x] * quality);
+				dct[y * bsize + x] = (float)(f
+						/ (DCTWorkerpool.QUANT[y * bsize + x] * quality));
 			}
 		}
+		
 
 		return dct;
 	}
