@@ -214,7 +214,9 @@ public class View extends JFrame implements Observer {
 				}
 				break;
 			case PROGRESS:
-				panel.setStatus(((Event) o).getResult().getProgress());
+				if (state == ViewState.PROCESSING) {
+				panel.setStatus(event.getResult().getProgress());
+				}
 				break;
 			case ABORT:
 				if (state == ViewState.ABORTING) {
@@ -314,6 +316,7 @@ public class View extends JFrame implements Observer {
 			gLayout.setHgap(0);
 			buttonPanel = new JPanel(gLayout);
 			progress = new JProgressBar(0, 100);
+			progress.setStringPainted(true);
 			start = new JButton("Start", startI);
 			start.setEnabled(false);
 			start.addActionListener(new ActionListener() {
