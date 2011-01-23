@@ -2,6 +2,7 @@ package view;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
@@ -197,6 +198,7 @@ public class View extends JFrame implements Observer {
 				break;
 			case ERROR:
 				if (state == ViewState.PROCESSING) {
+					View.this.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 					state = ViewState.IMG_LOADED;
 					log("An error occured during execution");
 					settings.setEnabled(true);
@@ -216,6 +218,7 @@ public class View extends JFrame implements Observer {
 				break;
 			case ABORT:
 				if (state == ViewState.ABORTING) {
+					View.this.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 					state = ViewState.IMG_LOADED;
 					log("Abort was successful");
 					settings.setEnabled(true);
@@ -230,6 +233,7 @@ public class View extends JFrame implements Observer {
 				break;
 			case COPY_MOVE_DETECTION_FINISHED:
 				if (state == ViewState.PROCESSING) {
+					View.this.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 					state = ViewState.PROCESSED;
 					log("Duration: " + event.getResult().getTime() + "ms");
 					settings.setEnabled(true);
@@ -331,6 +335,7 @@ public class View extends JFrame implements Observer {
 				@Override
 				public void actionPerformed(ActionEvent e) {
 					state = ViewState.PROCESSING;
+					View.this.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 					open.setEnabled(false);
 					settings.setEnabled(false);
 					abort.setEnabled(true);
