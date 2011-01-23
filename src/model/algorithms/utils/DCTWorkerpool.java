@@ -180,7 +180,7 @@ public class DCTWorkerpool extends Observable implements Observer {
 	private float[] image;
 	private int height;
 	private float quality;
-	private int paralellTasks;
+	private int parallelTasks;
 
 	public DCTWorkerpool(float[] input, int width, int height, float quality,
 			int paralellTasks, Observer observer) {
@@ -191,7 +191,7 @@ public class DCTWorkerpool extends Observable implements Observer {
 		this.image = input;
 		this.height = height;
 		this.quality = quality;
-		this.paralellTasks = paralellTasks;
+		this.parallelTasks = paralellTasks;
 
 		dct_blocks = new ArrayList<Block>((width - BLOCK_SIZE + 1)
 				* (height - BLOCK_SIZE + 1));
@@ -210,7 +210,7 @@ public class DCTWorkerpool extends Observable implements Observer {
 		/*
 		 * Create the threads...
 		 */
-		for (int i = 0; i < this.paralellTasks; i++) {
+		for (int i = 0; i < this.parallelTasks; i++) {
 			DCTWorker worker = new DCTWorker(blockNumbers, image, width,
 					quality);
 			worker.addObserver(this);

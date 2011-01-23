@@ -74,4 +74,14 @@ public class ShiftVector {
 		this.dy = dy;
 		this.bs = bs;
 	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (o instanceof ShiftVector) {
+			ShiftVector v = (ShiftVector) o;
+			return dx == v.dx && dy == v.dy;
+		} else {
+			return false;
+		}
+	}
 }

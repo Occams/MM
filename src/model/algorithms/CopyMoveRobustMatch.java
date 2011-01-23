@@ -66,6 +66,7 @@ public class CopyMoveRobustMatch extends ICopyMoveDetection implements Observer 
 						* 0.299 + ((pixel >> 8) & 0xff) * 0.587 + ((pixel) & 0xff) * 0.114);
 			}
 		}
+		
 		setChanged();
 		notifyObservers(new Event(Event.EventType.STATUS,
 				"Luminance matrix of image calculated in " + takeTime() + "ms"));
@@ -76,9 +77,11 @@ public class CopyMoveRobustMatch extends ICopyMoveDetection implements Observer 
 		workerpool = new DCTWorkerpool(grayscale, width, height,
 				quality, threads,this);
 		workerpool.start();
+		
 		if (workerpool.getAborted()) {
 			return;
 		}
+		
 		List<Block> dcts = workerpool.getResult();
 		setChanged();
 		notifyObservers(new Event(Event.EventType.STATUS,
