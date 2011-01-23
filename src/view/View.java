@@ -43,8 +43,11 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 
 import model.Event;
 import model.ShiftVector;
+import model.algorithms.CopyMoveFactory;
+import model.algorithms.CopyMoveRMFactory;
 import model.algorithms.CopyMoveRobustMatch;
 import model.algorithms.ICopyMoveDetection;
+import model.algorithms.SimpleCMFactory;
 
 public class View extends JFrame implements Observer {
 
@@ -52,11 +55,11 @@ public class View extends JFrame implements Observer {
 	private ViewPanel panel;
 	private JMenuBar menubar;
 	private JFileChooser chooser;
-	private ICopyMoveDetection algo;
 	private JCheckBoxMenuItem multithreading, debugSwitch;
 	private JMenuItem exit, open;
 	private JMenu settings;
 	private BufferedImage image;
+	private CopyMoveFactory factory;
 
 	private enum ViewState {
 		IDLE, IMG_LOADED, PROCESSING, ABORTING, PROCESSED;
@@ -69,13 +72,14 @@ public class View extends JFrame implements Observer {
 
 			@Override
 			public void run() {
-				new View();
+				new View(new SimpleCMFactory());
 			}
 		});
 	}
 
-	public View() {
+	public View(CopyMoveFactory factory) {
 		super();
+		this.factory = factory;
 		setVisible(true);
 		setTitle("Copy-Move Robust Match Algorithm");
 		setSize(800, 600);
@@ -294,6 +298,7 @@ public class View extends JFrame implements Observer {
 		private JTextArea log;
 		private JProgressBar progress;
 		private static final long serialVersionUID = 1L;
+		private ICopyMoveDetection algo;
 
 		public ViewPanel() {
 			super();
@@ -342,7 +347,7 @@ public class View extends JFrame implements Observer {
 					start.setEnabled(false);
 					quality.setEnabled(false);
 					threshold.setEnabled(false);
-					algo = new CopyMoveRobustMatch();
+					algo = factory.getInstance();
 					algo.addObserver(View.this);
 					int cores = multithreading.getState() ? Runtime
 							.getRuntime().availableProcessors() : 1;
