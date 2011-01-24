@@ -22,6 +22,7 @@ import java.util.Observer;
 
 import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
+import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBoxMenuItem;
@@ -33,6 +34,8 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
+import javax.swing.JRadioButton;
+import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JScrollPane;
 import javax.swing.JSlider;
 import javax.swing.JTextArea;
@@ -58,6 +61,7 @@ public class View extends JFrame implements Observer {
 	private JCheckBoxMenuItem multithreading, debugSwitch;
 	private JMenuItem exit, open;
 	private JMenu settings, algorithm;
+	private JRadioButtonMenuItem simple, matrixmult;
 	private BufferedImage image;
 	private CopyMoveFactory factory;
 
@@ -72,7 +76,7 @@ public class View extends JFrame implements Observer {
 
 			@Override
 			public void run() {
-				new View(new SimpleCMFactory());
+				new View(new CopyMoveRMFactory());
 			}
 		});
 	}
@@ -106,7 +110,9 @@ public class View extends JFrame implements Observer {
 		JMenu file = new JMenu("File");
 		file.setMnemonic(KeyEvent.VK_F);
 		settings = new JMenu("Settings");
-		file.setMnemonic(KeyEvent.VK_S);
+		settings.setMnemonic(KeyEvent.VK_S);
+		algorithm = new JMenu("Algorithm");
+		algorithm.setMnemonic(KeyEvent.VK_A);
 		chooser = new JFileChooser(new File("."));
 		chooser.setFileFilter(new FileNameExtensionFilter(
 				"JPEG, GIF, BMP, PNG", "jpg", "jpeg", "gif", "bmp", "png"));
@@ -160,14 +166,45 @@ public class View extends JFrame implements Observer {
 				setSize(getWidth(), getHeight() - 1);
 			}
 		});
-
+		
+		ButtonGroup bg = new ButtonGroup();
+		simple = new JRadioButtonMenuItem("Simple", false);
+		simple.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if (simple.isSelected()) {
+					log("Switched to simple algorithm");
+					factory = new SimpleCMFactory();
+				}	
+			}
+		});
+		
+		matrixmult = new JRadioButtonMenuItem("Matrix multiplication",true);
+		matrixmult.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if (matrixmult.isSelected()) {
+					log("Switched to matrix multiplication algorithm");
+					factory = new CopyMoveRMFactory();
+				}
+				
+			}
+		});
+		
+		bg.add(matrixmult);
+		bg.add(simple);
 		file.add(open);
 		file.addSeparator();
 		file.add(exit);
 		settings.add(multithreading);
 		settings.add(debugSwitch);
+		algorithm.add(matrixmult);
+		algorithm.add(simple);
 		menubar.add(file);
 		menubar.add(settings);
+		menubar.add(algorithm);
 		log("Application started");
 	}
 
@@ -211,6 +248,7 @@ public class View extends JFrame implements Observer {
 					panel.threshold.setEnabled(true);
 					panel.abort.setEnabled(false);
 					settings.setEnabled(true);
+					algorithm.setEnabled(true);
 					open.setEnabled(true);
 
 				}
@@ -231,6 +269,7 @@ public class View extends JFrame implements Observer {
 					panel.threshold.setEnabled(true);
 					panel.abort.setEnabled(false);
 					settings.setEnabled(true);
+					algorithm.setEnabled(true);
 					open.setEnabled(true);
 					panel.progress.setValue(0);
 				}
@@ -246,6 +285,7 @@ public class View extends JFrame implements Observer {
 					panel.threshold.setEnabled(true);
 					panel.abort.setEnabled(false);
 					settings.setEnabled(true);
+					algorithm.setEnabled(true);
 					open.setEnabled(true);
 					log("Found a total of "+event.getResult().getVectors().size()+" shiftvectors");
 					displayResult(event.getResult().getVectors());
@@ -330,7 +370,7 @@ public class View extends JFrame implements Observer {
 			gLayout.setVgap(20);
 			gLayout.setHgap(0);
 			buttonPanel = new JPanel(gLayout);
-			progress = new JProgressBar(0, 100);
+			progress = new JProgressBar(0, 50);
 			progress.setStringPainted(true);
 			start = new JButton("Start", startI);
 			start.setEnabled(false);
@@ -343,6 +383,7 @@ public class View extends JFrame implements Observer {
 					View.this.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 					open.setEnabled(false);
 					settings.setEnabled(false);
+					algorithm.setEnabled(false);
 					abort.setEnabled(true);
 					start.setEnabled(false);
 					quality.setEnabled(false);
