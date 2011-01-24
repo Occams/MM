@@ -223,6 +223,7 @@ public class View extends JFrame implements Observer {
 			panel.start.setEnabled(true);
 			panel.quality.setEnabled(true);
 			panel.threshold.setEnabled(true);
+			panel.minLength.setEnabled(true);
 			state = ViewState.IMG_LOADED;
 		} catch (IOException e) {
 			log("Error: Could not load image file\n");
