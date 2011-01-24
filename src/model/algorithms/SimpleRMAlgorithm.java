@@ -1,6 +1,7 @@
 package model.algorithms;
 
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -71,15 +72,18 @@ public class SimpleRMAlgorithm extends ICopyMoveDetection {
 		setChanged();
 		notifyObservers(new Event(Event.EventType.STATUS,
 				"Luminance matrix of image calculated in " + takeTime() + "ms"));
-		List<Block> dcts = new LinkedList<Block>();
+		List<Block> dcts = new ArrayList<Block>();
 
 		float[] cos = new float[256];
-
+		float[] alpha = new float[16];
+		
 		for (int u = 0; u < 16; u++) {
 			for (int v = 0; v < 16; v++) {
 				cos[u * 16 + v] = (float) Math
 						.cos((Math.PI * (2 * u + 1) * v) / 32);
 			}
+			alpha[u] = (float) (u == 0 ? 1 / Math.sqrt(16)
+					: 1 / Math.sqrt(32));
 		}
 		/*
 		 * Calculate the dcts of each block...
@@ -90,21 +94,18 @@ public class SimpleRMAlgorithm extends ICopyMoveDetection {
 
 				for (int u = 0; u < 16; u++) {
 					for (int v = 0; v < 16; v++) {
-						float alphau = (float) (u == 0 ? 1 / Math.sqrt(16)
-								: 1 / Math.sqrt(32));
-						float alphav = (float) (v == 0 ? 1 / Math.sqrt(16)
-								: 1 / Math.sqrt(32));
-						dct[u * 16 + v] = 0f;
+						int idx = u * 16 + v;
+						dct[idx] = 0f;
 						for (int i = 0; i < 16; i++) {
 							for (int j = 0; j < 16; j++) {
-								dct[u * 16 + v] += alphau * alphav * grayscale[(xx + i) * width
+								dct[idx] += alpha[u] * alpha[v] * grayscale[(xx + i) * width
 										+ yy + j]
 										* cos[i * 16 + u] * cos[j * 16 + v];
 							}
 						}
-						dct[u * 16 + v] /= QUANT[u*16+v];
-						dct[u * 16 + v] /= quality;
-						dct[u * 16 + v] = (float) Math.rint(dct[u * 16 + v]);
+						dct[idx] /= QUANT[idx];
+						dct[idx] /= quality;
+						dct[idx] = (float) Math.rint(dct[idx]);
 					}
 				}
 				

@@ -57,7 +57,7 @@ public class View extends JFrame implements Observer {
 	private JFileChooser chooser;
 	private JCheckBoxMenuItem multithreading, debugSwitch;
 	private JMenuItem exit, open;
-	private JMenu settings;
+	private JMenu settings, algorithm;
 	private BufferedImage image;
 	private CopyMoveFactory factory;
 
