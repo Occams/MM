@@ -1,21 +1,21 @@
 package model.algorithms.utils;
 
 public class Block implements Comparable<Block> {
-	private float[][] values;
+	private float[] values;
 	private int pos_x;
 	private int pos_y;
 
-	public Block(float[][] vals, int x, int y) {
+	public Block(float[] vals, int x, int y) {
 		this.values = vals;
 		pos_x = x;
 		pos_y = y;
 	}
 
-	public float[][] getValues() {
+	public float[] getValues() {
 		return values;
 	}
 
-	public void setValues(float[][] values) {
+	public void setValues(float[] values) {
 		this.values = values;
 	}
 
@@ -37,29 +37,25 @@ public class Block implements Comparable<Block> {
 
 	@Override
 	public int compareTo(Block o) {
-		float[][] b1 = getValues();
-		float[][] b2 = o.getValues();
+		float[] b1 = getValues();
+		float[] b2 = o.getValues();
 
 		for (int i = 0; i < b1.length; i++) {
-			for (int j = 0; j < b1[0].length; j++) {
-				if (b1[i][j] < b2[i][j]) {
-					return -1;
-				} else if (b1[i][j] > b2[i][j]) {
-					return 1;
-				}
+			if (b1[i] < b2[i]) {
+				return -1;
+			} else if (b1[i] > b2[i]) {
+				return 1;
 			}
 		}
-		
+
 		return 0;
 	}
 
 	public String toString() {
 		StringBuilder b = new StringBuilder();
-		for (float[] a : getValues()) {
-			for (float f : a) {
-				b.append(f);
-				b.append(",");
-			}
+		for (float a : getValues()) {
+			b.append(a);
+			b.append(",");
 		}
 		return b.toString();
 	}

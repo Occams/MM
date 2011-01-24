@@ -252,7 +252,8 @@ public class SimpleRMAlgorithm extends ICopyMoveDetection implements Observer {
 						event.getResult().addShiftVector(
 								new ShiftVector(b1.getPos_x(), b1.getPos_y(),
 										-b1.getPos_x() + b2.getPos_x(), -b1
-												.getPos_y() + b2.getPos_y(),
+												.getPos_y()
+												+ b2.getPos_y(),
 										DCTWorkerpool.BLOCK_SIZE));
 					}
 				}
@@ -313,7 +314,7 @@ public class SimpleRMAlgorithm extends ICopyMoveDetection implements Observer {
 			for (int yy = num; yy < width - 15 && !abort; yy += threads) {
 
 				for (int xx = 0; xx < height - 15; xx++) {
-					float[][] dct = new float[16][16];
+					float[] dct = new float[16 * 16];
 
 					for (int u = 0; u < 16; u++) {
 						for (int v = 0; v < 16; v++) {
@@ -325,7 +326,8 @@ public class SimpleRMAlgorithm extends ICopyMoveDetection implements Observer {
 								}
 							}
 
-							dct[u][v] = (float) Math.rint(f / QUANT[u][v]);
+							dct[u * 16 + v] = (float) Math
+									.rint(f / QUANT[u][v]);
 						}
 					}
 
