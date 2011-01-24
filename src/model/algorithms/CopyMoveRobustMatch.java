@@ -108,7 +108,7 @@ public class CopyMoveRobustMatch extends ICopyMoveDetection implements Observer 
 			if (b1.compareTo(b2) == 0) {
 				int sx = b1.getPos_x() - b2.getPos_x();
 				int sy = b1.getPos_y() - b2.getPos_y();
-				if (getVLenght(sx, sy) > minLength) {
+				if (getVLenght(sx, sy) >= minLength) {
 					if (sx < 0) {
 						sx = -sx;
 						sy = -sy;
@@ -147,7 +147,7 @@ public class CopyMoveRobustMatch extends ICopyMoveDetection implements Observer 
 				int sx = b1.getPos_x() - b2.getPos_x();
 				int sy = b1.getPos_y() - b2.getPos_y();
 
-				if (getVLenght(sx, sy) > minLength) {
+				if (getVLenght(sx, sy) >= minLength) {
 					if (sx < 0) {
 						sx = -sx;
 						sy = -sy;
