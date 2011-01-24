@@ -40,7 +40,11 @@ public class Block implements Comparable<Block> {
 		float[] b1 = getValues();
 		float[] b2 = o.getValues();
 
-		for (int i = 0; i < b1.length; i++) {
+		if (b1.length != b2.length) {
+			return b1.length < b2.length ? -1 : 1;
+		}
+
+		for (int i = 0; i < Math.min(b1.length, b2.length); i++) {
 			if (b1[i] < b2[i]) {
 				return -1;
 			} else if (b1[i] > b2[i]) {

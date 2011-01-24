@@ -188,7 +188,8 @@ public class SimpleRMAlgorithm extends ICopyMoveDetection implements Observer {
 		 * itself, the value at a given position represents the count of the
 		 * shift vector.
 		 */
-		int shiftVectors[] = new int[width * height * 2];
+		int shiftVectors[][] = new int[height*2][width];
+		
 		for (int i = 0; i < dcts.size() - 1; i++) {
 			Block b1 = dcts.get(i);
 			Block b2 = dcts.get(i + 1);
@@ -197,7 +198,7 @@ public class SimpleRMAlgorithm extends ICopyMoveDetection implements Observer {
 				int sx = b1.getPos_x() - b2.getPos_x();
 				int sy = b1.getPos_y() - b2.getPos_y();
 
-				if (getVLenght(sx, sy) > minLength) {
+				if (getVLenght(sx, sy) >= minLength) {
 
 					if (sx < 0) {
 						sx = -sx;
@@ -209,7 +210,7 @@ public class SimpleRMAlgorithm extends ICopyMoveDetection implements Observer {
 					 */
 					sy += height;
 
-					shiftVectors[sy * width + sx]++;
+					shiftVectors[sy][sx]++;
 				}
 			}
 		}
@@ -237,7 +238,7 @@ public class SimpleRMAlgorithm extends ICopyMoveDetection implements Observer {
 				int sx = b1.getPos_x() - b2.getPos_x();
 				int sy = b1.getPos_y() - b2.getPos_y();
 
-				if (getVLenght(sx, sy) > minLength) {
+				if (getVLenght(sx, sy) >= minLength) {
 					if (sx < 0) {
 						sx = -sx;
 						sy = -sy;
@@ -248,7 +249,7 @@ public class SimpleRMAlgorithm extends ICopyMoveDetection implements Observer {
 					 */
 					sy += height;
 
-					if (shiftVectors[sy * width + sx] > threshold) {
+					if (shiftVectors[sy][sx] > threshold) {
 						event.getResult().addShiftVector(
 								new ShiftVector(b1.getPos_x(), b1.getPos_y(),
 										-b1.getPos_x() + b2.getPos_x(), -b1
