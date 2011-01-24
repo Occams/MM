@@ -20,6 +20,7 @@ public class RobustMatchSimple extends RobustMatch implements Observer {
 			synchronized (dcts) {
 				dcts.add((Block) arg1);
 			}
+			
 			if (dcts.size() % (height - 15) == 0) {
 				setChanged();
 				notifyObservers(new Event(EventType.PROGRESS, new Result(
@@ -102,7 +103,6 @@ public class RobustMatchSimple extends RobustMatch implements Observer {
 		 * Sort the dcts lexicographically...
 		 */
 		Collections.sort(dcts);
-
 		setChanged();
 		notifyObservers(new Event(Event.EventType.STATUS,
 				"Lexicographically sorted all DCTs in " + takeTime() + "ms"));
@@ -224,7 +224,7 @@ public class RobustMatchSimple extends RobustMatch implements Observer {
 							}
 
 							dct[u * 16 + v] = (float) Math
-									.rint(f / QUANT[u][v]);
+									.round(f / QUANT[u][v]);
 						}
 					}
 

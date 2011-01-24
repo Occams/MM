@@ -79,10 +79,10 @@ public class RobustMatchFast extends RobustMatch implements Observer {
 		int amount = 1;
 		do {
 			amount *= 2;
+			
 			/*
 			 * Calculate the dcts of each block...
 			 */
-
 			Thread[] tA = new Thread[threads];
 
 			for (int t = 0; t < threads; t++) {
