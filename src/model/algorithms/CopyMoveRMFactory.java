@@ -1,6 +1,5 @@
 package model.algorithms;
 
-
 public class CopyMoveRMFactory implements CopyMoveFactory {
 
 	@Override

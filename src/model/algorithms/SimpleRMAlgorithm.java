@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Observable;
+import java.util.Observer;
 
 import model.Event;
 import model.Result;
@@ -14,9 +15,12 @@ import model.Event.EventType;
 import model.algorithms.utils.Block;
 import model.algorithms.utils.DCTWorkerpool;
 
-public class SimpleRMAlgorithm extends ICopyMoveDetection {
+public class SimpleRMAlgorithm extends ICopyMoveDetection implements Observer {
 
 	private boolean abort = false;
+	private long oldtime = 0;
+	List<Block> dcts = new ArrayList<Block>();
+	private int height, width;
 
 	public float QUANT[][] = new float[][] {
 			{ 32.0f, 27.5f, 25.0f, 40.0f, 60.0f, 100.0f, 127.5f, 152.5f,
@@ -77,8 +81,23 @@ public class SimpleRMAlgorithm extends ICopyMoveDetection {
 	}
 
 	@Override
+	public void update(Observable arg0, Object arg1) {
+		if (arg1 != null && arg1 instanceof Block) {
+			synchronized (dcts) {
+				dcts.add((Block) arg1);
+			}
+			if (dcts.size() % (height - 15) == 0) {
+				setChanged();
+				notifyObservers(new Event(EventType.PROGRESS, new Result(
+						(float) dcts.size()
+								/ (float) ((width - 15) * (height - 15)))));
+			}
+		}
+	}
+
+	@Override
 	public void detect(BufferedImage input, float quality, int threshold,
-			int threads) {
+			int minLength, int threads) {
 
 		if (!checkImage(input)) {
 			setChanged();
@@ -89,13 +108,13 @@ public class SimpleRMAlgorithm extends ICopyMoveDetection {
 
 		long start = System.currentTimeMillis();
 		takeTime();
-		int height = input.getHeight();
-		int width = input.getWidth();
+		height = input.getHeight();
+		width = input.getWidth();
 
 		/*
 		 * The image can be processed. First calc grayscale image...
 		 */
-		int[][] grayscale = new int[height][width];
+		final int[][] grayscale = new int[height][width];
 		for (int y = 0; y < height; y++) {
 			for (int x = 0; x < width; x++) {
 				int pixel = input.getRGB(x, y);
@@ -107,9 +126,8 @@ public class SimpleRMAlgorithm extends ICopyMoveDetection {
 		setChanged();
 		notifyObservers(new Event(Event.EventType.STATUS,
 				"Luminance matrix of image calculated in " + takeTime() + "ms"));
-		List<Block> dcts = new ArrayList<Block>();
 
-		float[][][][] constants = new float[16][16][16][16];
+		final float[][][][] constants = new float[16][16][16][16];
 
 		for (int u = 0; u < 16; u++) {
 			float alphau = (float) (u == 0 ? 1.0f / Math.sqrt(16) : 1.0f / Math
@@ -127,33 +145,28 @@ public class SimpleRMAlgorithm extends ICopyMoveDetection {
 				QUANT[u][v] *= quality;
 			}
 		}
+
 		/*
 		 * Calculate the dcts of each block...
 		 */
-		for (int yy = 0; yy < width - 17 && !abort; yy++) {
-			for (int xx = 0; xx < height - 17; xx++) {
-				float[][] dct = new float[16][16];
 
-				for (int u = 0; u < 16; u++) {
-					for (int v = 0; v < 16; v++) {
-						float f = 0f;
-						for (int i = 0; i < 16; i++) {
-							for (int j = 0; j < 16; j++) {
-								f += grayscale[(xx + i)][yy + j]
-										* constants[u][v][i][j];
-							}
-						}
+		Thread[] tA = new Thread[threads];
 
-						dct[u][v] = (float) Math.rint(f / QUANT[u][v]);
-					}
-				}
+		for (int t = 0; t < threads; t++) {
+			Worker w = new Worker(t, threads, width, height, grayscale,
+					constants);
+			w.addObserver(this);
+			Thread th = new Thread(w);
+			tA[t] = th;
+			th.start();
+		}
 
-				dcts.add(new Block(dct, yy, xx));
+		for (int t = 0; t < threads; t++) {
+			try {
+				tA[t].join();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
 			}
-
-			setChanged();
-			notifyObservers(new Event(EventType.PROGRESS, new Result((float) yy
-					/ (float) (width - 17))));
 		}
 
 		setChanged();
@@ -164,6 +177,7 @@ public class SimpleRMAlgorithm extends ICopyMoveDetection {
 		 * Sort the dcts lexicographically...
 		 */
 		Collections.sort(dcts);
+
 		setChanged();
 		notifyObservers(new Event(Event.EventType.STATUS,
 				"Lexicographically sorted all DCTs in " + takeTime() + "ms"));
@@ -183,17 +197,20 @@ public class SimpleRMAlgorithm extends ICopyMoveDetection {
 				int sx = b1.getPos_x() - b2.getPos_x();
 				int sy = b1.getPos_y() - b2.getPos_y();
 
-				if (sx < 0) {
-					sx = -sx;
-					sy = -sy;
+				if (getVLenght(sx, sy) > minLength) {
+
+					if (sx < 0) {
+						sx = -sx;
+						sy = -sy;
+					}
+
+					/*
+					 * This has to be done because sy may be negative...
+					 */
+					sy += height;
+
+					shiftVectors[sy * width + sx]++;
 				}
-
-				/*
-				 * This has to be done because sy may be negative...
-				 */
-				sy += height;
-
-				shiftVectors[sy * width + sx]++;
 			}
 		}
 
@@ -215,24 +232,29 @@ public class SimpleRMAlgorithm extends ICopyMoveDetection {
 		for (int i = 0; i < dcts.size() - 1; i++) {
 			Block b1 = dcts.get(i);
 			Block b2 = dcts.get(i + 1);
+
 			if (b1.compareTo(b2) == 0) {
 				int sx = b1.getPos_x() - b2.getPos_x();
 				int sy = b1.getPos_y() - b2.getPos_y();
-				if (sx < 0) {
-					sx = -sx;
-					sy = -sy;
-				}
 
-				/*
-				 * This has to be done because sy may be negative...
-				 */
-				sy += height;
+				if (getVLenght(sx, sy) > minLength) {
+					if (sx < 0) {
+						sx = -sx;
+						sy = -sy;
+					}
 
-				if (shiftVectors[sy * width + sx] > threshold) {
-					event.getResult().addShiftVector(
-							new ShiftVector(b1.getPos_x(), b1.getPos_y(), -b1
-									.getPos_x() + b2.getPos_x(), -b1.getPos_y()
-									+ b2.getPos_y(), DCTWorkerpool.BLOCK_SIZE));
+					/*
+					 * This has to be done because sy may be negative...
+					 */
+					sy += height;
+
+					if (shiftVectors[sy * width + sx] > threshold) {
+						event.getResult().addShiftVector(
+								new ShiftVector(b1.getPos_x(), b1.getPos_y(),
+										-b1.getPos_x() + b2.getPos_x(), -b1
+												.getPos_y() + b2.getPos_y(),
+										DCTWorkerpool.BLOCK_SIZE));
+					}
 				}
 			}
 		}
@@ -254,7 +276,9 @@ public class SimpleRMAlgorithm extends ICopyMoveDetection {
 		return true;
 	}
 
-	private long oldtime = 0;
+	private double getVLenght(int x, int y) {
+		return Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
+	}
 
 	private long takeTime() {
 		if (oldtime != 0) {
@@ -264,6 +288,52 @@ public class SimpleRMAlgorithm extends ICopyMoveDetection {
 		} else {
 			oldtime = System.currentTimeMillis();
 			return -1;
+		}
+	}
+
+	private class Worker extends Observable implements Runnable {
+		private final int num, threads, width, height, grayscale[][];
+		private final float[][][][] constants;
+
+		public Worker(final int num, final int threads, final int width,
+				final int height, final int grayscale[][],
+				final float[][][][] constants) {
+			this.num = num;
+			this.threads = threads;
+			this.width = width;
+			this.height = height;
+			this.grayscale = grayscale;
+			this.constants = constants;
+
+		}
+
+		@Override
+		public void run() {
+
+			for (int yy = num; yy < width - 15 && !abort; yy += threads) {
+
+				for (int xx = 0; xx < height - 15; xx++) {
+					float[][] dct = new float[16][16];
+
+					for (int u = 0; u < 16; u++) {
+						for (int v = 0; v < 16; v++) {
+							float f = 0f;
+							for (int i = 0; i < 16; i++) {
+								for (int j = 0; j < 16; j++) {
+									f += grayscale[(xx + i)][yy + j]
+											* constants[u][v][i][j];
+								}
+							}
+
+							dct[u][v] = (float) Math.rint(f / QUANT[u][v]);
+						}
+					}
+
+					setChanged();
+					notifyObservers(new Block(dct, yy, xx));
+				}
+			}
+
 		}
 	}
 

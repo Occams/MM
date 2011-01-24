@@ -87,7 +87,7 @@ public class View extends JFrame implements Observer {
 		setVisible(true);
 		setTitle("Copy-Move Robust Match Algorithm");
 		setSize(800, 600);
-		setMinimumSize(new Dimension(800, 600));
+		setMinimumSize(new Dimension(900, 600));
 		setResizable(true);
 		setLocationRelativeTo(null);
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -166,33 +166,33 @@ public class View extends JFrame implements Observer {
 				setSize(getWidth(), getHeight() - 1);
 			}
 		});
-		
+
 		ButtonGroup bg = new ButtonGroup();
 		simple = new JRadioButtonMenuItem("Simple", false);
 		simple.addActionListener(new ActionListener() {
-			
+
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				if (simple.isSelected()) {
 					log("Switched to simple algorithm");
 					factory = new SimpleCMFactory();
-				}	
+				}
 			}
 		});
-		
-		matrixmult = new JRadioButtonMenuItem("Matrix multiplication",true);
+
+		matrixmult = new JRadioButtonMenuItem("Matrix multiplication", true);
 		matrixmult.addActionListener(new ActionListener() {
-			
+
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				if (matrixmult.isSelected()) {
 					log("Switched to matrix multiplication algorithm");
 					factory = new CopyMoveRMFactory();
 				}
-				
+
 			}
 		});
-		
+
 		bg.add(matrixmult);
 		bg.add(simple);
 		file.add(open);
@@ -217,7 +217,7 @@ public class View extends JFrame implements Observer {
 		try {
 			image = ImageIO.read(file);
 			log("Successfully loaded " + file.getName());
-			panel.imagePanel.setImage(image);
+			panel.imagePanel.setImages(new BufferedImage[] { image });
 			panel.start.setEnabled(true);
 			panel.quality.setEnabled(true);
 			panel.threshold.setEnabled(true);
@@ -239,13 +239,15 @@ public class View extends JFrame implements Observer {
 				break;
 			case ERROR:
 				if (state == ViewState.PROCESSING) {
-					View.this.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+					View.this.setCursor(Cursor
+							.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 					state = ViewState.IMG_LOADED;
 					log("An error occured during execution");
 					settings.setEnabled(true);
 					panel.start.setEnabled(true);
 					panel.quality.setEnabled(true);
 					panel.threshold.setEnabled(true);
+					panel.minLength.setEnabled(true);
 					panel.abort.setEnabled(false);
 					settings.setEnabled(true);
 					algorithm.setEnabled(true);
@@ -260,13 +262,15 @@ public class View extends JFrame implements Observer {
 				break;
 			case ABORT:
 				if (state == ViewState.ABORTING) {
-					View.this.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+					View.this.setCursor(Cursor
+							.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 					state = ViewState.IMG_LOADED;
 					log("Abort was successful");
 					settings.setEnabled(true);
 					panel.start.setEnabled(true);
 					panel.quality.setEnabled(true);
 					panel.threshold.setEnabled(true);
+					panel.minLength.setEnabled(true);
 					panel.abort.setEnabled(false);
 					settings.setEnabled(true);
 					algorithm.setEnabled(true);
@@ -276,18 +280,22 @@ public class View extends JFrame implements Observer {
 				break;
 			case COPY_MOVE_DETECTION_FINISHED:
 				if (state == ViewState.PROCESSING) {
-					View.this.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+					View.this.setCursor(Cursor
+							.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 					state = ViewState.PROCESSED;
 					log("Duration: " + event.getResult().getTime() + "ms");
 					settings.setEnabled(true);
 					panel.start.setEnabled(true);
 					panel.quality.setEnabled(true);
 					panel.threshold.setEnabled(true);
+					panel.minLength.setEnabled(true);
 					panel.abort.setEnabled(false);
 					settings.setEnabled(true);
 					algorithm.setEnabled(true);
 					open.setEnabled(true);
-					log("Found a total of "+event.getResult().getVectors().size()+" shiftvectors");
+					log("Found a total of "
+							+ event.getResult().getVectors().size()
+							+ " shiftvectors");
 					displayResult(event.getResult().getVectors());
 				}
 				break;
@@ -311,7 +319,7 @@ public class View extends JFrame implements Observer {
 
 		g.drawImage(image, 0, 0, null);
 		g_alt.drawImage(image, 0, 0, null);
-		
+
 		for (ShiftVector v : vectors) {
 			g.setColor(red);
 			g.fillRect(v.getSx(), v.getSy(), v.getBs(), v.getBs());
@@ -319,12 +327,12 @@ public class View extends JFrame implements Observer {
 			g.fillRect(v.getSx() + v.getDx(), v.getSy() + v.getDy(), v.getBs(),
 					v.getBs());
 			g_alt.setColor(Color.WHITE);
-			g_alt.drawLine(v.getSx(), v.getSy(), v.getSx() + v.getDx(), v.getSy() + v.getDy());
+			g_alt.drawLine(v.getSx(), v.getSy(), v.getSx() + v.getDx(),
+					v.getSy() + v.getDy());
 		}
 
 		g.dispose();
-		panel.imagePanel.setImage(i);
-		panel.imagePanel.setAltImage(i_alt);
+		panel.imagePanel.setImages(new BufferedImage[] { i, i_alt, image });
 	}
 
 	public class ViewPanel extends JPanel {
@@ -332,8 +340,8 @@ public class View extends JFrame implements Observer {
 		private JPanel buttonPanel;
 		private ImagePanel imagePanel;
 		private JButton start, abort;
-		private JLabel qualityL, thresholdL;
-		private JSlider quality, threshold;
+		private JLabel qualityL, thresholdL, minLengthL;
+		private JSlider quality, threshold, minLength;
 		private JScrollPane scrollP;
 		private JTextArea log;
 		private JProgressBar progress;
@@ -370,7 +378,7 @@ public class View extends JFrame implements Observer {
 			gLayout.setVgap(20);
 			gLayout.setHgap(0);
 			buttonPanel = new JPanel(gLayout);
-			progress = new JProgressBar(0, 50);
+			progress = new JProgressBar(0, 100);
 			progress.setStringPainted(true);
 			start = new JButton("Start", startI);
 			start.setEnabled(false);
@@ -380,7 +388,8 @@ public class View extends JFrame implements Observer {
 				@Override
 				public void actionPerformed(ActionEvent e) {
 					state = ViewState.PROCESSING;
-					View.this.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+					View.this.setCursor(Cursor
+							.getPredefinedCursor(Cursor.WAIT_CURSOR));
 					open.setEnabled(false);
 					settings.setEnabled(false);
 					algorithm.setEnabled(false);
@@ -388,19 +397,24 @@ public class View extends JFrame implements Observer {
 					start.setEnabled(false);
 					quality.setEnabled(false);
 					threshold.setEnabled(false);
+					minLength.setEnabled(false);
 					algo = factory.getInstance();
 					algo.addObserver(View.this);
-					int cores = multithreading.getState() ? Runtime
-							.getRuntime().availableProcessors() : 1;
-					log("Invoked algorithm with a total number of " + cores
-							+ " threads");
 					Thread t = new Thread(new Runnable() {
 						@Override
 						public void run() {
+
 							int cores = multithreading.getState() ? Runtime
 									.getRuntime().availableProcessors() : 1;
+							log("Invoked algorithm with a total number of "
+									+ cores + " threads");
+							log("Settings: Quality = " + getQuality()
+									+ " , Threshold = " + threshold.getValue()
+									+ " , Minimum vector length = "
+									+ minLength.getValue());
 							algo.detect(image, getQuality(),
-									threshold.getValue(), cores);
+									threshold.getValue(), minLength.getValue(),
+									cores);
 							log.setEditable(false);
 						}
 					});
@@ -432,7 +446,7 @@ public class View extends JFrame implements Observer {
 					qualityL.setText("Quality [" + getQuality() + "]:");
 				}
 			});
-			threshold = new JSlider(1, 200);
+			threshold = new JSlider(1, 100);
 			threshold.setEnabled(false);
 			threshold.setValue(10);
 			threshold.setToolTipText("Threshold setting used by the algorithm");
@@ -441,9 +455,26 @@ public class View extends JFrame implements Observer {
 				@Override
 				public void stateChanged(ChangeEvent e) {
 					thresholdL.setText("Threshold [" + threshold.getValue()
-							+ "]: ");
+							+ "]:");
 				}
 			});
+
+			minLength = new JSlider(0, 100);
+			minLength.setEnabled(false);
+			minLength.setValue(50);
+			minLength.setToolTipText("Minimum length of a shiftvector");
+			minLength.addChangeListener(new ChangeListener() {
+
+				@Override
+				public void stateChanged(ChangeEvent e) {
+					minLengthL.setText("Min. Length [" + minLength.getValue()
+							+ "]:");
+				}
+			});
+
+			minLengthL = new JLabel("Min. Length [" + minLength.getValue()
+					+ "]:");
+			minLengthL.setHorizontalAlignment(JLabel.CENTER);
 			qualityL = new JLabel("Quality [" + getQuality() + "]:");
 			qualityL.setHorizontalAlignment(JLabel.CENTER);
 			thresholdL = new JLabel("Threshold [" + threshold.getValue() + "]:");
@@ -454,6 +485,8 @@ public class View extends JFrame implements Observer {
 			buttonPanel.add(quality);
 			buttonPanel.add(thresholdL);
 			buttonPanel.add(threshold);
+			buttonPanel.add(minLengthL);
+			buttonPanel.add(minLength);
 			buttonPanel.add(progress);
 		}
 
@@ -467,21 +500,21 @@ public class View extends JFrame implements Observer {
 
 		public class ImagePanel extends JPanel {
 			private static final long serialVersionUID = 1L;
-			private BufferedImage image = null;
-			private BufferedImage altImage = null;
+			private BufferedImage images[] = null, image = null;
+			private int idx = 0;
 
 			public ImagePanel() {
 				super();
 				setBackground(Color.BLACK);
 				setVisible(true);
-				
+
 				addMouseListener(new MouseAdapter() {
 					@Override
 					public void mouseClicked(MouseEvent e) {
-						if (View.this.state == ViewState.PROCESSED && e.getButton() == MouseEvent.BUTTON1) {
-							BufferedImage tmp = image;
-							image = altImage;
-							altImage = tmp;
+						if (View.this.state == ViewState.PROCESSED
+								&& e.getButton() == MouseEvent.BUTTON1) {
+							idx++;
+							image = images[idx % images.length];
 							repaint();
 						}
 					}
@@ -509,16 +542,10 @@ public class View extends JFrame implements Observer {
 				}
 			}
 
-			public BufferedImage getAltImage() {
-				return altImage;
-			}
-
-			public void setAltImage(BufferedImage altImage) {
-				this.altImage = altImage;
-			}
-			
-			public void setImage(BufferedImage image) {
-				this.image = image;
+			public void setImages(BufferedImage[] images) {
+				idx = 0;
+				this.images = images;
+				this.image = images[idx % images.length];
 				repaint();
 			}
 

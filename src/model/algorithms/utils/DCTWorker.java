@@ -70,11 +70,9 @@ public class DCTWorker extends Observable implements Runnable {
 				}
 
 				// Quantise the dct coefficient
-				dct[y][x] = (float)(f
-						/ (DCTWorkerpool.QUANT[y * bsize + x] * quality));
+				dct[y][x] = (float) (f / (DCTWorkerpool.QUANT[y * bsize + x] * quality));
 			}
 		}
-		
 
 		return dct;
 	}

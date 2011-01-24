@@ -41,7 +41,7 @@ public class CopyMoveRobustMatch extends ICopyMoveDetection implements Observer 
 	 */
 	@Override
 	public void detect(BufferedImage input, float quality, int threshold,
-			int threads) {
+			int minLength, int threads) {
 
 		if (!checkImage(input)) {
 			setChanged();
@@ -66,7 +66,7 @@ public class CopyMoveRobustMatch extends ICopyMoveDetection implements Observer 
 						* 0.299 + ((pixel >> 8) & 0xff) * 0.587 + ((pixel) & 0xff) * 0.114) - 128;
 			}
 		}
-		
+
 		setChanged();
 		notifyObservers(new Event(Event.EventType.STATUS,
 				"Luminance matrix of image calculated in " + takeTime() + "ms"));
@@ -74,14 +74,14 @@ public class CopyMoveRobustMatch extends ICopyMoveDetection implements Observer 
 		/*
 		 * Calculate the dcts of each block...
 		 */
-		workerpool = new DCTWorkerpool(grayscale, width, height,
-				quality, threads,this);
+		workerpool = new DCTWorkerpool(grayscale, width, height, quality,
+				threads, this);
 		workerpool.start();
-		
+
 		if (workerpool.getAborted()) {
 			return;
 		}
-		
+
 		List<Block> dcts = workerpool.getResult();
 		setChanged();
 		notifyObservers(new Event(Event.EventType.STATUS,
@@ -108,18 +108,19 @@ public class CopyMoveRobustMatch extends ICopyMoveDetection implements Observer 
 			if (b1.compareTo(b2) == 0) {
 				int sx = b1.getPos_x() - b2.getPos_x();
 				int sy = b1.getPos_y() - b2.getPos_y();
+				if (getVLenght(sx, sy) > minLength) {
+					if (sx < 0) {
+						sx = -sx;
+						sy = -sy;
+					}
 
-				if (sx < 0) {
-					sx = -sx;
-					sy = -sy;
+					/*
+					 * This has to be done because sy may be negative...
+					 */
+					sy += height;
+
+					shiftVectors[sy * width + sx]++;
 				}
-
-				/*
-				 * This has to be done because sy may be negative...
-				 */
-				sy += height;
-
-				shiftVectors[sy * width + sx]++;
 			}
 		}
 
@@ -142,24 +143,28 @@ public class CopyMoveRobustMatch extends ICopyMoveDetection implements Observer 
 			Block b1 = dcts.get(i);
 			Block b2 = dcts.get(i + 1);
 			if (b1.compareTo(b2) == 0) {
+
 				int sx = b1.getPos_x() - b2.getPos_x();
 				int sy = b1.getPos_y() - b2.getPos_y();
-				if (sx < 0) {
-					sx = -sx;
-					sy = -sy;
-				}
 
-				/*
-				 * This has to be done because sy may be negative...
-				 */
-				sy += height;
+				if (getVLenght(sx, sy) > minLength) {
+					if (sx < 0) {
+						sx = -sx;
+						sy = -sy;
+					}
 
-				if (shiftVectors[sy * width + sx] > threshold) {
-					event.getResult().addShiftVector(
-							new ShiftVector(b1.getPos_x(), b1.getPos_y(), -b1
-									.getPos_x()
-									+ b2.getPos_x(), -b1.getPos_y()
-									+ b2.getPos_y(), DCTWorkerpool.BLOCK_SIZE));
+					/*
+					 * This has to be done because sy may be negative...
+					 */
+					sy += height;
+
+					if (shiftVectors[sy * width + sx] > threshold) {
+						event.getResult().addShiftVector(
+								new ShiftVector(b1.getPos_x(), b1.getPos_y(),
+										-b1.getPos_x() + b2.getPos_x(), -b1
+												.getPos_y() + b2.getPos_y(),
+										DCTWorkerpool.BLOCK_SIZE));
+					}
 				}
 			}
 		}
@@ -179,6 +184,10 @@ public class CopyMoveRobustMatch extends ICopyMoveDetection implements Observer 
 			return false;
 		}
 		return true;
+	}
+
+	private double getVLenght(int x, int y) {
+		return Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
 	}
 
 	private long oldtime = 0;
