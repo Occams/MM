@@ -86,8 +86,8 @@ public class View extends JFrame implements Observer {
 		this.factory = factory;
 		setVisible(true);
 		setTitle("Copy-Move Robust Match Algorithm");
-		setSize(800, 600);
-		setMinimumSize(new Dimension(900, 600));
+		setSize(880, 600);
+		setMinimumSize(new Dimension(880, 600));
 		setResizable(true);
 		setLocationRelativeTo(null);
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -106,6 +106,7 @@ public class View extends JFrame implements Observer {
 		ImageIcon multithreadingI = new ImageIcon("icons/settings.png");
 		ImageIcon debugI = new ImageIcon("icons/tool.png");
 		ImageIcon openI = new ImageIcon("icons/open.png");
+		ImageIcon algoI = new ImageIcon("icons/algo.png");
 		menubar = new JMenuBar();
 		JMenu file = new JMenu("File");
 		file.setMnemonic(KeyEvent.VK_F);
@@ -168,7 +169,7 @@ public class View extends JFrame implements Observer {
 		});
 
 		ButtonGroup bg = new ButtonGroup();
-		simple = new JRadioButtonMenuItem("Simple", false);
+		simple = new JRadioButtonMenuItem("Simple", algoI, false);
 		simple.addActionListener(new ActionListener() {
 
 			@Override
@@ -180,7 +181,8 @@ public class View extends JFrame implements Observer {
 			}
 		});
 
-		matrixmult = new JRadioButtonMenuItem("Matrix multiplication", true);
+		matrixmult = new JRadioButtonMenuItem("Matrix multiplication", algoI,
+				true);
 		matrixmult.addActionListener(new ActionListener() {
 
 			@Override
