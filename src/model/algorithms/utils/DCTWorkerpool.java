@@ -3,9 +3,9 @@ package model.algorithms.utils;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Observable;
 import java.util.Observer;
-import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class DCTWorkerpool extends Observable implements Observer {

@@ -34,7 +34,6 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
-import javax.swing.JRadioButton;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JScrollPane;
 import javax.swing.JSlider;
@@ -46,11 +45,11 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 
 import model.Event;
 import model.ShiftVector;
-import model.algorithms.CopyMoveFactory;
-import model.algorithms.CopyMoveRMFactory;
-import model.algorithms.CopyMoveRobustMatch;
+import model.algorithms.CopyMoveDetectionFactory;
 import model.algorithms.ICopyMoveDetection;
-import model.algorithms.SimpleCMFactory;
+import model.algorithms.RobustMatchFastFactory;
+import model.algorithms.RobustMatchMMFactory;
+import model.algorithms.RobustMatchSimpleFactory;
 
 public class View extends JFrame implements Observer {
 
@@ -61,9 +60,9 @@ public class View extends JFrame implements Observer {
 	private JCheckBoxMenuItem multithreading, debugSwitch;
 	private JMenuItem exit, open;
 	private JMenu settings, algorithm;
-	private JRadioButtonMenuItem simple, matrixmult;
+	private JRadioButtonMenuItem simple, matrixmult,fast;
 	private BufferedImage image;
-	private CopyMoveFactory factory;
+	private CopyMoveDetectionFactory factory;
 
 	private enum ViewState {
 		IDLE, IMG_LOADED, PROCESSING, ABORTING, PROCESSED;
@@ -76,12 +75,12 @@ public class View extends JFrame implements Observer {
 
 			@Override
 			public void run() {
-				new View(new CopyMoveRMFactory());
+				new View(new RobustMatchMMFactory());
 			}
 		});
 	}
 
-	public View(CopyMoveFactory factory) {
+	public View(CopyMoveDetectionFactory factory) {
 		super();
 		this.factory = factory;
 		setVisible(true);
@@ -176,7 +175,7 @@ public class View extends JFrame implements Observer {
 			public void actionPerformed(ActionEvent e) {
 				if (simple.isSelected()) {
 					log("Switched to simple algorithm");
-					factory = new SimpleCMFactory();
+					factory = new RobustMatchSimpleFactory();
 				}
 			}
 		});
@@ -189,14 +188,28 @@ public class View extends JFrame implements Observer {
 			public void actionPerformed(ActionEvent e) {
 				if (matrixmult.isSelected()) {
 					log("Switched to matrix multiplication algorithm");
-					factory = new CopyMoveRMFactory();
+					factory = new RobustMatchMMFactory();
 				}
 
+			}
+		});
+		
+		fast = new JRadioButtonMenuItem("Fast", algoI, false);
+		fast.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if (fast.isSelected()) {
+					log("Switched to fast algorithm");
+					factory = new RobustMatchFastFactory();
+				}
+				
 			}
 		});
 
 		bg.add(matrixmult);
 		bg.add(simple);
+		bg.add(fast);
 		file.add(open);
 		file.addSeparator();
 		file.add(exit);
@@ -204,6 +217,7 @@ public class View extends JFrame implements Observer {
 		settings.add(debugSwitch);
 		algorithm.add(matrixmult);
 		algorithm.add(simple);
+		algorithm.add(fast);
 		menubar.add(file);
 		menubar.add(settings);
 		menubar.add(algorithm);
@@ -464,7 +478,7 @@ public class View extends JFrame implements Observer {
 
 			minLength = new JSlider(0, 100);
 			minLength.setEnabled(false);
-			minLength.setValue(50);
+			minLength.setValue(16);
 			minLength.setToolTipText("Minimum length of a shiftvector");
 			minLength.addChangeListener(new ChangeListener() {
 

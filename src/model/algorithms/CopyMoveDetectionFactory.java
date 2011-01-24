@@ -1,6 +1,6 @@
 package model.algorithms;
 
-public interface CopyMoveFactory {
+public interface CopyMoveDetectionFactory {
 
 	public ICopyMoveDetection getInstance();
 }

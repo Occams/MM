@@ -3,82 +3,18 @@ package model.algorithms;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
 
 import model.Event;
+import model.Event.EventType;
 import model.Result;
 import model.ShiftVector;
-import model.Event.EventType;
 import model.algorithms.utils.Block;
 import model.algorithms.utils.DCTWorkerpool;
 
-public class SimpleFastRMAlgorithm extends ICopyMoveDetection implements Observer {
-
-	private boolean abort = false;
-	private long oldtime = 0;
-	List<Block> dcts = new ArrayList<Block>();
-	private int height, width;
-
-	public float QUANT[][] = new float[][] {
-			{ 32.0f, 27.5f, 25.0f, 40.0f, 60.0f, 100.0f, 127.5f, 152.5f,
-					152.5f, 152.5f, 152.5f, 152.5f, 152.5f, 152.5f, 152.5f,
-					152.5f },
-			{ 30.0f, 30.0f, 35.0f, 47.5f, 65.0f, 145.0f, 150.0f, 137.5f,
-					152.5f, 152.5f, 152.5f, 152.5f, 152.5f, 152.5f, 152.5f,
-					152.5f },
-			{ 35.0f, 32.5f, 40.0f, 60.0f, 100.0f, 142.5f, 172.5f, 140.0f,
-					152.5f, 152.5f, 152.5f, 152.5f, 152.5f, 152.5f, 152.5f,
-					152.5f },
-			{ 35.0f, 42.5f, 55.0f, 72.5f, 127.5f, 217.5f, 200.0f, 155.0f,
-					152.5f, 152.5f, 152.5f, 152.5f, 152.5f, 152.5f, 152.5f,
-					152.5f },
-			{ 45.0f, 55.0f, 92.5f, 140.0f, 170.0f, 272.5f, 257.5f, 192.5f,
-					152.5f, 152.5f, 152.5f, 152.5f, 152.5f, 152.5f, 152.5f,
-					152.5f },
-			{ 60.0f, 87.5f, 137.5f, 160.0f, 202.5f, 260.0f, 282.5f, 230.0f,
-					152.5f, 152.5f, 152.5f, 152.5f, 152.5f, 152.5f, 152.5f,
-					152.5f },
-			{ 122.5f, 160.0f, 195.0f, 217.5f, 257.5f, 302.5f, 300.0f, 252.5f,
-					152.5f, 152.5f, 152.5f, 152.5f, 152.5f, 152.5f, 152.5f,
-					152.5f },
-			{ 180.0f, 230.0f, 237.5f, 245.0f, 280.0f, 250.0f, 257.5f, 247.5f,
-					152.5f, 152.5f, 152.5f, 152.5f, 152.5f, 152.5f, 152.5f,
-					152.5f },
-			{ 180.0f, 180.0f, 180.0f, 180.0f, 180.0f, 180.0f, 180.0f, 180.0f,
-					247.5f, 247.5f, 247.5f, 247.5f, 247.5f, 247.5f, 247.5f,
-					247.5f },
-			{ 180.0f, 180.0f, 180.0f, 180.0f, 180.0f, 180.0f, 180.0f, 180.0f,
-					247.5f, 247.5f, 247.5f, 247.5f, 247.5f, 247.5f, 247.5f,
-					247.5f },
-			{ 180.0f, 180.0f, 180.0f, 180.0f, 180.0f, 180.0f, 180.0f, 180.0f,
-					247.5f, 247.5f, 247.5f, 247.5f, 247.5f, 247.5f, 247.5f,
-					247.5f },
-			{ 180.0f, 180.0f, 180.0f, 180.0f, 180.0f, 180.0f, 180.0f, 180.0f,
-					247.5f, 247.5f, 247.5f, 247.5f, 247.5f, 247.5f, 247.5f,
-					247.5f },
-			{ 180.0f, 180.0f, 180.0f, 180.0f, 180.0f, 180.0f, 180.0f, 180.0f,
-					247.5f, 247.5f, 247.5f, 247.5f, 247.5f, 247.5f, 247.5f,
-					247.5f },
-			{ 180.0f, 180.0f, 180.0f, 180.0f, 180.0f, 180.0f, 180.0f, 180.0f,
-					247.5f, 247.5f, 247.5f, 247.5f, 247.5f, 247.5f, 247.5f,
-					247.5f },
-			{ 180.0f, 180.0f, 180.0f, 180.0f, 180.0f, 180.0f, 180.0f, 180.0f,
-					247.5f, 247.5f, 247.5f, 247.5f, 247.5f, 247.5f, 247.5f,
-					247.5f },
-			{ 180.0f, 180.0f, 180.0f, 180.0f, 180.0f, 180.0f, 180.0f, 180.0f,
-					247.5f, 247.5f, 247.5f, 247.5f, 247.5f, 247.5f, 247.5f,
-					247.5f } };
-
-	@Override
-	public void abort() {
-		abort = true;
-		setChanged();
-		notifyObservers(new Event(EventType.ABORT,
-				"The detection was aborted successfully!"));
-	}
+public class RobustMatchFast extends RobustMatch implements Observer {
 
 	@Override
 	public void update(Observable arg0, Object arg1) {
@@ -114,14 +50,7 @@ public class SimpleFastRMAlgorithm extends ICopyMoveDetection implements Observe
 		/*
 		 * The image can be processed. First calc grayscale image...
 		 */
-		final int[][] grayscale = new int[height][width];
-		for (int y = 0; y < height; y++) {
-			for (int x = 0; x < width; x++) {
-				int pixel = input.getRGB(x, y);
-				grayscale[y][x] = (int) (((pixel >> 16) & 0xff) * 0.299
-						+ ((pixel >> 8) & 0xff) * 0.587 + ((pixel) & 0xff) * 0.114) - 128;
-			}
-		}
+		final int[][] grayscale = getGrayscale(input);
 
 		setChanged();
 		notifyObservers(new Event(Event.EventType.STATUS,
@@ -276,8 +205,7 @@ public class SimpleFastRMAlgorithm extends ICopyMoveDetection implements Observe
 						event.getResult().addShiftVector(
 								new ShiftVector(b1.getPos_x(), b1.getPos_y(),
 										-b1.getPos_x() + b2.getPos_x(), -b1
-												.getPos_y()
-												+ b2.getPos_y(),
+												.getPos_y() + b2.getPos_y(),
 										DCTWorkerpool.BLOCK_SIZE));
 					}
 				}
@@ -286,34 +214,6 @@ public class SimpleFastRMAlgorithm extends ICopyMoveDetection implements Observe
 
 		setChanged();
 		notifyObservers(event);
-	}
-
-	/**
-	 * Checks if the copy move detection can be performed on the given image.
-	 * 
-	 * @param image
-	 * @return
-	 */
-	private boolean checkImage(BufferedImage image) {
-		if (image.getWidth() < 16 || image.getHeight() < 16) {
-			return false;
-		}
-		return true;
-	}
-
-	private double getVLenght(int x, int y) {
-		return Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
-	}
-
-	private long takeTime() {
-		if (oldtime != 0) {
-			long ret = System.currentTimeMillis() - oldtime;
-			oldtime = System.currentTimeMillis();
-			return ret;
-		} else {
-			oldtime = System.currentTimeMillis();
-			return -1;
-		}
 	}
 
 	private class Worker extends Observable implements Runnable {

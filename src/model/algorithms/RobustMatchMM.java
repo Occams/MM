@@ -7,9 +7,9 @@ import java.util.Observable;
 import java.util.Observer;
 
 import model.Event;
+import model.Event.EventType;
 import model.Result;
 import model.ShiftVector;
-import model.Event.EventType;
 import model.algorithms.utils.Block;
 import model.algorithms.utils.DCTWorkerpool;
 
@@ -20,7 +20,7 @@ import model.algorithms.utils.DCTWorkerpool;
  *         copy-move changes of an image.
  * 
  */
-public class CopyMoveRobustMatch extends ICopyMoveDetection implements Observer {
+public class RobustMatchMM extends RobustMatch implements Observer {
 	private DCTWorkerpool workerpool;
 
 	@Override
@@ -171,36 +171,6 @@ public class CopyMoveRobustMatch extends ICopyMoveDetection implements Observer 
 
 		setChanged();
 		notifyObservers(event);
-	}
-
-	/**
-	 * Checks if the copy move detection can be performed on the given image.
-	 * 
-	 * @param image
-	 * @return
-	 */
-	private boolean checkImage(BufferedImage image) {
-		if (image.getWidth() < 16 || image.getHeight() < 16) {
-			return false;
-		}
-		return true;
-	}
-
-	private double getVLenght(int x, int y) {
-		return Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
-	}
-
-	private long oldtime = 0;
-
-	private long takeTime() {
-		if (oldtime != 0) {
-			long ret = System.currentTimeMillis() - oldtime;
-			oldtime = System.currentTimeMillis();
-			return ret;
-		} else {
-			oldtime = System.currentTimeMillis();
-			return -1;
-		}
 	}
 
 	@Override
