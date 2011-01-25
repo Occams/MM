@@ -63,7 +63,7 @@ public class View extends JFrame implements Observer {
 	private JCheckBoxMenuItem multithreading, debugSwitch;
 	private JMenuItem exit, open;
 	private JMenu settings, algorithm;
-	private JRadioButtonMenuItem simple, matrixmult,fast,partial;
+	private JRadioButtonMenuItem simple, matrixmult,partial;
 	private BufferedImage image;
 	private CopyMoveDetectionFactory factory;
 	private List<ShiftVector> vectors = new LinkedList<ShiftVector>();
@@ -198,25 +198,12 @@ public class View extends JFrame implements Observer {
 			}
 		});
 		
-		fast = new JRadioButtonMenuItem("Fast", algoI, false);
-		fast.addActionListener(new ActionListener() {
-			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				if (fast.isSelected()) {
-					log("Switched to fast algorithm");
-					factory = new RobustMatchFastFactory();
-				}
-				
-			}
-		});
-		
 		partial = new JRadioButtonMenuItem("Partial DCT", algoI, true);
 		partial.addActionListener(new ActionListener() {
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				if (fast.isSelected()) {
+				if (partial.isSelected()) {
 					log("Switched to partial DCT algorithm");
 					factory = new RobustMatchPartialDCTFactory();
 				}
@@ -226,7 +213,6 @@ public class View extends JFrame implements Observer {
 
 		bg.add(matrixmult);
 		bg.add(simple);
-		bg.add(fast);
 		bg.add(partial);
 		file.add(open);
 		file.addSeparator();
@@ -235,7 +221,6 @@ public class View extends JFrame implements Observer {
 		settings.add(debugSwitch);
 		algorithm.add(matrixmult);
 		algorithm.add(simple);
-		algorithm.add(fast);
 		algorithm.add(partial);
 		menubar.add(file);
 		menubar.add(settings);

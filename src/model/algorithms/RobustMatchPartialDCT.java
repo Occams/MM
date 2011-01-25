@@ -299,7 +299,7 @@ public class RobustMatchPartialDCT extends RobustMatch implements Observer {
 					}
 				}
 
-				if (num == 0) {
+				if (num == 0 && xx % 16 == 0) {
 					setChanged();
 					notifyObservers((float) xx / (float) (height - 15));
 				}
