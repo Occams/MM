@@ -57,16 +57,14 @@ public class RobustMatchSimple extends RobustMatch implements Observer {
 		final float[][][][] constants = new float[16][16][16][16];
 
 		for (int u = 0; u < 16; u++) {
-			float alphau = (float) (u == 0 ? 1.0f / Math.sqrt(16) : 1.0f / Math
-					.sqrt(32));
+			float alphau = (float) (u == 0 ? Math.sqrt(1.0f / 16.0f) : Math.sqrt(2.0f / 16.0f));
 			for (int v = 0; v < 16; v++) {
-				float alphav = (float) (v == 0 ? 1.0f / Math.sqrt(16)
-						: 1.0f / Math.sqrt(32));
+				float alphav = (float) (v == 0 ? Math.sqrt(1.0f / 16.0f) : Math.sqrt(2.0f / 16.0f));
 				for (int i = 0; i < 16; i++) {
 					for (int j = 0; j < 16; j++) {
 						constants[u][v][i][j] = (float) (alphau * alphav
-								* Math.cos((Math.PI * (2 * i + 1) * u) / 32.0f) * Math
-								.cos((Math.PI * (2 * j + 1) * v) / 32.0f));
+								* Math.cos((Math.PI * ( i + 0.5f) * u) / 16.0f) * Math
+								.cos((Math.PI * (i * j + 0.5f) * v) / 16.0f));
 					}
 				}
 				QUANT[u][v] *= quality;
@@ -97,7 +95,7 @@ public class RobustMatchSimple extends RobustMatch implements Observer {
 
 		setChanged();
 		notifyObservers(new Event(Event.EventType.STATUS,
-				"DCT of each block was calculated in " + takeTime() + "ms"));
+				"DCT of each block were calculated in " + takeTime() + "ms"));
 
 		/*
 		 * Sort the dcts lexicographically...

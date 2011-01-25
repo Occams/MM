@@ -49,6 +49,7 @@ import model.algorithms.CopyMoveDetectionFactory;
 import model.algorithms.ICopyMoveDetection;
 import model.algorithms.RobustMatchFastFactory;
 import model.algorithms.RobustMatchMMFactory;
+import model.algorithms.RobustMatchPartialDCTFactory;
 import model.algorithms.RobustMatchSimpleFactory;
 
 public class View extends JFrame implements Observer {

@@ -85,7 +85,7 @@ public class RobustMatchMM extends RobustMatch implements Observer {
 		List<Block> dcts = workerpool.getResult();
 		setChanged();
 		notifyObservers(new Event(Event.EventType.STATUS,
-				"DCT of each block was calculated in " + takeTime() + "ms"));
+				"DCT of each block were calculated in " + takeTime() + "ms"));
 
 		/*
 		 * Sort the dcts lexicographically...

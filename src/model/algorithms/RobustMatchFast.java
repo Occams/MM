@@ -59,16 +59,14 @@ public class RobustMatchFast extends RobustMatch implements Observer {
 		final float[][][][] constants = new float[16][16][16][16];
 
 		for (int u = 0; u < 16; u++) {
-			float alphau = (float) (u == 0 ? 1.0f / Math.sqrt(16) : 1.0f / Math
-					.sqrt(32));
+			float alphau = (float) (u == 0 ? Math.sqrt(1.0f / 16.0f) : Math.sqrt(2.0f / 16.0f));
 			for (int v = 0; v < 16; v++) {
-				float alphav = (float) (v == 0 ? 1.0f / Math.sqrt(16)
-						: 1.0f / Math.sqrt(32));
+				float alphav = (float) (v == 0 ? Math.sqrt(1.0f / 16.0f) : Math.sqrt(2.0f / 16.0f));
 				for (int i = 0; i < 16; i++) {
 					for (int j = 0; j < 16; j++) {
 						constants[u][v][i][j] = (float) (alphau * alphav
-								* Math.cos((Math.PI * (2 * i + 1) * u) / 32.0f) * Math
-								.cos((Math.PI * (2 * j + 1) * v) / 32.0f));
+								* Math.cos((Math.PI * ( i + 0.5f) * u) / 16.0f) * Math
+								.cos((Math.PI * (i * j + 0.5f) * v) / 16.0f));
 					}
 				}
 				QUANT[u][v] *= quality;
@@ -78,7 +76,7 @@ public class RobustMatchFast extends RobustMatch implements Observer {
 		List<Block> refineList = new ArrayList<Block>();
 		int amount = 1;
 		do {
-			amount *= 2;
+			amount *= 4;
 			
 			/*
 			 * Calculate the dcts of each block...
@@ -104,7 +102,7 @@ public class RobustMatchFast extends RobustMatch implements Observer {
 
 			setChanged();
 			notifyObservers(new Event(Event.EventType.STATUS,
-					"DCT of each block was calculated in " + takeTime() + "ms"));
+					amount+"x"+amount+"-DCT of each block was calculated in " + takeTime() + "ms"));
 
 			/*
 			 * Sort the dcts lexicographically...
@@ -126,12 +124,9 @@ public class RobustMatchFast extends RobustMatch implements Observer {
 				}
 			}
 
-			System.out.println("Have to refine " + refineList.size()
-					+ " blocks...");
-
 			setChanged();
 			notifyObservers(new Event(Event.EventType.STATUS,
-					"Lexicographically sorted all DCTs in " + takeTime() + "ms"));
+					"Lexicographically sorted all "+amount+"x"+amount+"-DCTs in " + takeTime() + "ms"));
 
 		} while (amount < 16 || refineList.isEmpty());
 
@@ -242,7 +237,7 @@ public class RobustMatchFast extends RobustMatch implements Observer {
 				for (int yy = num; yy < width - 15 && !abort; yy += threads) {
 
 					for (int xx = 0; xx < height - 15; xx++) {
-						float[] dct = new float[amount * amount];
+						float[] dct = new float[256];
 
 						for (int u = 0; u < amount; u++) {
 							for (int v = 0; v < amount; v++) {
@@ -254,7 +249,7 @@ public class RobustMatchFast extends RobustMatch implements Observer {
 									}
 								}
 
-								dct[u * amount + v] = (float) Math.rint(f
+								dct[u * 16 + v] = (float) Math.rint(f
 										/ QUANT[u][v]);
 							}
 						}
@@ -269,25 +264,21 @@ public class RobustMatchFast extends RobustMatch implements Observer {
 				 */
 				for (int n = num; n < blocks.size(); n += threads) {
 					Block b = blocks.get(n);
-					float[] dct = new float[amount * amount];
+					float[] dct = blocks.get(n).getValues();
 					int xx = b.getPos_x();
 					int yy = b.getPos_y();
 
-					for (int u = 0; u < amount; u++) {
-						for (int v = 0; v < amount; v++) {
+					for (int u = amount/2; u < amount; u++) {
+						for (int v = amount/2; v < amount; v++) {
 							float f = 0f;
 							for (int i = 0; i < 16; i++) {
 								for (int j = 0; j < 16; j++) {
-									try {
 										f += grayscale[(yy + i)][xx + j]
 												* constants[u][v][i][j];
-									} catch (Exception e) {
-										System.out.println("ut of bunds");
-									}
 								}
 							}
 
-							dct[u * amount + v] = (float) Math.rint(f
+							dct[u * 16 + v] = (float) Math.rint(f
 									/ QUANT[u][v]);
 						}
 					}

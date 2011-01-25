@@ -71,8 +71,32 @@ public abstract class RobustMatch extends ICopyMoveDetection {
 		notifyObservers(new Event(EventType.ABORT,
 				"The detection was aborted successfully!"));
 	}
+	
+	protected float[][][][] preComputeConstants(final float quality) {
+		final float[][][][] constants = new float[16][16][16][16];
 
-	protected int[][] getGrayscale(BufferedImage input) {
+		for (int u = 0; u < 16; u++) {
+			float alphau = (float) (u == 0 ? Math.sqrt(1.0f / 16.0f) : Math
+					.sqrt(2.0f / 16.0f));
+			for (int v = 0; v < 16; v++) {
+				float alphav = (float) (v == 0 ? Math.sqrt(1.0f / 16.0f) : Math
+						.sqrt(2.0f / 16.0f));
+				for (int i = 0; i < 16; i++) {
+					for (int j = 0; j < 16; j++) {
+						constants[u][v][i][j] = (float) (alphau * alphav
+								* Math.cos((Math.PI * (i + 0.5f) * u) / 16.0f) * Math
+								.cos((Math.PI * (i * j + 0.5f) * v) / 16.0f));
+					}
+				}
+				
+				QUANT[u][v] *= quality;
+			}
+		}
+		
+		return constants;
+	}
+
+	protected int[][] getGrayscale(final BufferedImage input) {
 		int[][] grayscale = new int[height][width];
 
 		for (int y = 0; y < height; y++) {
@@ -85,14 +109,14 @@ public abstract class RobustMatch extends ICopyMoveDetection {
 		return grayscale;
 	}
 	
-	protected boolean checkImage(BufferedImage image) {
+	protected boolean checkImage(final BufferedImage image) {
 		if (image.getWidth() < 16 || image.getHeight() < 16) {
 			return false;
 		}
 		return true;
 	}
 
-	protected double getVLenght(int x, int y) {
+	protected double getVLenght(final int x, final int y) {
 		return Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
 	}
 
