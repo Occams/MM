@@ -71,7 +71,7 @@ public abstract class RobustMatch extends ICopyMoveDetection {
 		notifyObservers(new Event(EventType.ABORT,
 				"The detection was aborted successfully!"));
 	}
-	
+
 	protected float[][][][] preComputeConstants(final float quality) {
 		final float[][][][] constants = new float[16][16][16][16];
 
@@ -88,11 +88,11 @@ public abstract class RobustMatch extends ICopyMoveDetection {
 								.cos((Math.PI * (i * j + 0.5f) * v) / 16.0f));
 					}
 				}
-				
+
 				QUANT[u][v] *= quality;
 			}
 		}
-		
+
 		return constants;
 	}
 
@@ -108,7 +108,7 @@ public abstract class RobustMatch extends ICopyMoveDetection {
 		}
 		return grayscale;
 	}
-	
+
 	protected boolean checkImage(final BufferedImage image) {
 		if (image.getWidth() < 16 || image.getHeight() < 16) {
 			return false;
@@ -116,8 +116,9 @@ public abstract class RobustMatch extends ICopyMoveDetection {
 		return true;
 	}
 
-	protected double getVLenght(final int x, final int y) {
-		return Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
+	protected int getVLenght(final int x, final int y) {
+		// return Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
+		return Math.max(Math.abs(x), Math.abs(y));
 	}
 
 	protected long takeTime() {
