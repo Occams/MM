@@ -18,24 +18,25 @@ import model.algorithms.utils.QuickSort;
 
 public class RobustMatchPartialDCT extends RobustMatch implements Observer {
 	boolean secondStep = false;
-	
+
 	@Override
 	public void update(Observable arg0, Object o) {
 		if (o instanceof Float) {
 			setChanged();
 			float progress;
-			
+
 			if (!secondStep) {
 				progress = (Float) o / 2.0f;
 			} else {
-				progress = 0.5f + (Float) o ;
+				progress = 0.5f + (Float) o;
 			}
 			notifyObservers(new Event(EventType.PROGRESS, new Result(progress)));
 		}
 	}
 
 	@Override
-	public void detect(BufferedImage input, float quality, int threshold, int threads) {
+	public void detect(BufferedImage input, float quality, int threshold,
+			int threads) {
 
 		/* Check if image is at least 16x16 in size */
 		if (!checkImage(input)) {
@@ -44,7 +45,7 @@ public class RobustMatchPartialDCT extends RobustMatch implements Observer {
 					"The image could not be processed!"));
 			return;
 		}
-		
+
 		width = input.getWidth();
 		height = input.getHeight();
 		long start = System.currentTimeMillis();
@@ -68,13 +69,13 @@ public class RobustMatchPartialDCT extends RobustMatch implements Observer {
 		/* Calculate 4x4 DCTs of each block */
 		float[][] blocks = new float[(width - 15) * (height - 15)][258];
 		boolean[] flagged = new boolean[blocks.length];
-		
+
 		/* Flag blocks */
 		for (int i = 0; i < blocks.length; i++) {
-			blocks[i][256] = i % (width-15);
-			blocks[i][257] = (int) i / (width-15);
+			blocks[i][256] = i % (width - 15);
+			blocks[i][257] = (int) i / (width - 15);
 		}
-		
+
 		Thread[] tA = new Thread[threads];
 
 		for (int t = 0; t < threads; t++) {
@@ -103,22 +104,25 @@ public class RobustMatchPartialDCT extends RobustMatch implements Observer {
 		/*
 		 * Sort the 4x4 DCTs of each block.
 		 */
-		QuickSort.sort(blocks);
+		int[] compareMask = { 0, 1, 2, 3, 16, 17, 18, 19, 32, 33, 34, 35, 48,
+				49, 50, 51 };
+
+		QuickSort.sort(blocks, compareMask);
 		setChanged();
 		notifyObservers(new Event(Event.EventType.STATUS,
 				"Lexicographically sorted all 4x4 DCTs in " + takeTime() + "ms"));
-		
+
 		setChanged();
 		notifyObservers(new Event(Event.EventType.STATUS,
 				"Number of DCT blocks: " + blocks.length));
-		
+
 		/* Mark unique elements */
 		for (int i = 0; i < blocks.length - 1; i++) {
 			if (compareDCT(blocks[i], blocks[i + 1]) == 0) {
 				flagged[i] = true;
-				flagged[i+1] = true;
+				flagged[i + 1] = true;
 			}
-			
+
 			flagged[i] = !flagged[i];
 		}
 
@@ -135,7 +139,7 @@ public class RobustMatchPartialDCT extends RobustMatch implements Observer {
 
 		/* Required for progress notifications. */
 		secondStep = true;
-		
+
 		/* Calculate 16x16 DCTs of non-unique blocks */
 		for (int t = 0; t < threads; t++) {
 			Worker w = new Worker(t, threads, width, height, grayscale,
@@ -161,19 +165,24 @@ public class RobustMatchPartialDCT extends RobustMatch implements Observer {
 						+ takeTime() + "ms"));
 
 		/* Sort the 16x16 DCTs of each block */
-		QuickSort.sort(blocks);
+		compareMask = new int[256];
+		
+		for(int i = 0; i < 256; i++)
+			compareMask[i] = i;
+		
+		QuickSort.sort(blocks,compareMask);
 		setChanged();
 		notifyObservers(new Event(Event.EventType.STATUS,
 				"Lexicographically sorted all non-unique 16x16 DCTs in "
 						+ takeTime() + "ms"));
 
-//		for (int i = 0; i < blocks.length; i++) {
-//			for (int j = 0; j < 258; j++) {
-//				System.out.print(blocks[i][j]);
-//			}
-//			System.out.println();
-//		}
-		
+		// for (int i = 0; i < blocks.length; i++) {
+		// for (int j = 0; j < 258; j++) {
+		// System.out.print(blocks[i][j]);
+		// }
+		// System.out.println();
+		// }
+
 		/*
 		 * Collect vectors... The Shift Vector is an array double of the
 		 * original image size. The position in the array identifies the vector
@@ -190,19 +199,19 @@ public class RobustMatchPartialDCT extends RobustMatch implements Observer {
 				int sx = (int) (a[256] - b[256]);
 				int sy = (int) (a[257] - b[257]);
 
-					if (sx < 0) {
-						sx = -sx;
-						sy = -sy;
-					}
-
-					sy += height;
-					shiftVectors[sy][sx]++;
+				if (sx < 0) {
+					sx = -sx;
+					sy = -sy;
 				}
+
+				sy += height;
+				shiftVectors[sy][sx]++;
+			}
 		}
 
 		setChanged();
 		notifyObservers(new Event(Event.EventType.STATUS,
-				"Calculated the shift vectors in " + takeTime() + "ms"));
+				"Calculated shift vectors in " + takeTime() + "ms"));
 
 		Event event = new Event(EventType.COPY_MOVE_DETECTION_FINISHED,
 				new Result(System.currentTimeMillis() - start));
@@ -220,18 +229,18 @@ public class RobustMatchPartialDCT extends RobustMatch implements Observer {
 				int sx = aBx - bBx;
 				int sy = aBy - bBy;
 
-					if (sx < 0) {
-						sx = -sx;
-						sy = -sy;
-					}
-					
-					sy += height;
+				if (sx < 0) {
+					sx = -sx;
+					sy = -sy;
+				}
 
-					if (shiftVectors[sy][sx] > threshold) {
-						event.getResult().addShiftVector(
-								new ShiftVector(aBx, aBy, bBx - aBx, bBy - aBy,
-										DCTWorkerpool.BLOCK_SIZE));
-					}
+				sy += height;
+
+				if (shiftVectors[sy][sx] > threshold) {
+					event.getResult().addShiftVector(
+							new ShiftVector(aBx, aBy, bBx - aBx, bBy - aBy,
+									DCTWorkerpool.BLOCK_SIZE));
+				}
 			}
 		}
 
@@ -271,10 +280,10 @@ public class RobustMatchPartialDCT extends RobustMatch implements Observer {
 					int idx = xx * (width - 15) + yy;
 
 					if (!flagged[idx]) {
-						
+
 						for (int u = dctStart; u < dctEnd; u++) {
 							for (int v = dctStart; v < dctEnd; v++) {
-								
+
 								float f = 0f;
 								for (int i = 0; i < 16; i++) {
 									for (int j = 0; j < 16; j++) {
@@ -289,10 +298,10 @@ public class RobustMatchPartialDCT extends RobustMatch implements Observer {
 						}
 					}
 				}
-				
+
 				if (num == 0) {
 					setChanged();
-					notifyObservers((float) xx / (float)(height - 15) );
+					notifyObservers((float) xx / (float) (height - 15));
 				}
 			}
 
@@ -316,7 +325,7 @@ public class RobustMatchPartialDCT extends RobustMatch implements Observer {
 		boolean change = false;
 
 		do {
-			
+
 			change = false;
 			for (int i = 0; i < n - 1; i++) {
 				if (compareDCT(blocks[i], blocks[i + 1]) > 0) {
