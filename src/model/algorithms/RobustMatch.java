@@ -72,7 +72,7 @@ public abstract class RobustMatch extends ICopyMoveDetection {
 				"The detection was aborted successfully!"));
 	}
 
-	protected float[][][][] preComputeConstants(final float quality) {
+	protected final float[][][][] preComputeConstants(final float quality) {
 		final float[][][][] constants = new float[16][16][16][16];
 
 		for (int u = 0; u < 16; u++) {
@@ -96,8 +96,8 @@ public abstract class RobustMatch extends ICopyMoveDetection {
 		return constants;
 	}
 
-	protected int[][] getGrayscale(final BufferedImage input) {
-		int[][] grayscale = new int[height][width];
+	protected final int[][] getGrayscale(final BufferedImage input) {
+		final int[][] grayscale = new int[height][width];
 
 		for (int y = 0; y < height; y++) {
 			for (int x = 0; x < width; x++) {

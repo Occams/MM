@@ -1,10 +1,6 @@
 package model.algorithms;
 
 import java.awt.image.BufferedImage;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.ListIterator;
 import java.util.Observable;
 import java.util.Observer;
 
@@ -12,11 +8,12 @@ import model.Event;
 import model.Result;
 import model.ShiftVector;
 import model.Event.EventType;
-import model.algorithms.utils.Block;
-import model.algorithms.utils.DCTWorkerpool;
 import model.algorithms.utils.QuickSort;
 
 public class RobustMatchPartialDCT extends RobustMatch implements Observer {
+	private static final int BLOCK_X_OFFS = 256;
+	private static final int BLOCK_Y_OFFS = 257;
+	private static final int BLOCK_FLAG_OFFS = 258;
 	boolean secondStep = false;
 
 	@Override
@@ -67,20 +64,20 @@ public class RobustMatchPartialDCT extends RobustMatch implements Observer {
 				"Precomputed constant values in " + takeTime() + "ms"));
 
 		/* Calculate 4x4 DCTs of each block */
-		short[][] blocks = new short[(width - 15) * (height - 15)][258];
-		boolean[] flagged = new boolean[blocks.length];
+		short[][] blocks = new short[(width - 15) * (height - 15)][259];
 
 		/* Flag blocks */
 		for (int i = 0; i < blocks.length; i++) {
-			blocks[i][256] = (short) (i % (width - 15));
-			blocks[i][257] = (short) ( i / (width - 15));
+			blocks[i][BLOCK_X_OFFS] = (short) (i % (width - 15));
+			blocks[i][BLOCK_Y_OFFS] = (short) (i / (width - 15));
+			blocks[i][BLOCK_FLAG_OFFS] = 0;
 		}
 
 		Thread[] tA = new Thread[threads];
 
 		for (int t = 0; t < threads; t++) {
 			Worker w = new Worker(t, threads, width, height, grayscale,
-					constants, blocks, flagged, 0, 4);
+					constants, blocks, 0, 4);
 			w.addObserver(this);
 			Thread th = new Thread(w);
 			tA[t] = th;
@@ -118,17 +115,17 @@ public class RobustMatchPartialDCT extends RobustMatch implements Observer {
 
 		/* Mark unique elements */
 		for (int i = 0; i < blocks.length - 1; i++) {
-			if (compareDCT(blocks[i], blocks[i + 1]) == 0) {
-				flagged[i] = true;
-				flagged[i + 1] = true;
+			if (compareDCT(blocks[i], blocks[i + 1], compareMask) == 0) {
+				blocks[i][BLOCK_FLAG_OFFS] = 1;
+				blocks[i + 1][BLOCK_FLAG_OFFS] = 1;
 			}
 
-			flagged[i] = !flagged[i];
+			blocks[i][BLOCK_FLAG_OFFS] = (short) (1 - blocks[i][BLOCK_FLAG_OFFS]);
 		}
 
 		int c = 0;
 		for (int i = 0; i < blocks.length - 1; i++) {
-			if (flagged[i])
+			if (blocks[i][BLOCK_FLAG_OFFS] == 1)
 				c++;
 		}
 
@@ -143,7 +140,7 @@ public class RobustMatchPartialDCT extends RobustMatch implements Observer {
 		/* Calculate 16x16 DCTs of non-unique blocks */
 		for (int t = 0; t < threads; t++) {
 			Worker w = new Worker(t, threads, width, height, grayscale,
-					constants, blocks, flagged, 5, 16);
+					constants, blocks, 4, 16);
 			w.addObserver(this);
 			Thread th = new Thread(w);
 			tA[t] = th;
@@ -166,11 +163,11 @@ public class RobustMatchPartialDCT extends RobustMatch implements Observer {
 
 		/* Sort the 16x16 DCTs of each block */
 		compareMask = new int[256];
-		
-		for(int i = 0; i < 256; i++)
+
+		for (int i = 0; i < 256; i++)
 			compareMask[i] = i;
-		
-		QuickSort.sort(blocks,compareMask);
+
+		QuickSort.sort(blocks, compareMask);
 		setChanged();
 		notifyObservers(new Event(Event.EventType.STATUS,
 				"Lexicographically sorted all non-unique 16x16 DCTs in "
@@ -195,9 +192,9 @@ public class RobustMatchPartialDCT extends RobustMatch implements Observer {
 			short[] a = blocks[i];
 			short[] b = blocks[i + 1];
 
-			if (!flagged[i] && compareDCT(a, b) == 0) {
-				int sx = (int) (a[256] - b[256]);
-				int sy = (int) (a[257] - b[257]);
+			if (blocks[i][BLOCK_FLAG_OFFS] == 0 && compareDCT(a, b) == 0) {
+				int sx = (int) (a[BLOCK_X_OFFS] - b[BLOCK_X_OFFS]);
+				int sy = (int) (a[BLOCK_Y_OFFS] - b[BLOCK_Y_OFFS]);
 
 				if (sx < 0) {
 					sx = -sx;
@@ -223,9 +220,9 @@ public class RobustMatchPartialDCT extends RobustMatch implements Observer {
 			short[] a = blocks[i];
 			short[] b = blocks[i + 1];
 
-			if (!flagged[i] && compareDCT(a, b) == 0) {
-				int aBy = (int) a[257], aBx = (int) a[256];
-				int bBy = (int) b[257], bBx = (int) b[256];
+			if (blocks[i][BLOCK_FLAG_OFFS] == 0 && compareDCT(a, b) == 0) {
+				int aBy = (int) a[BLOCK_Y_OFFS], aBx = (int) a[BLOCK_X_OFFS];
+				int bBy = (int) b[BLOCK_Y_OFFS], bBx = (int) b[BLOCK_X_OFFS];
 				int sx = aBx - bBx;
 				int sy = aBy - bBy;
 
@@ -237,9 +234,10 @@ public class RobustMatchPartialDCT extends RobustMatch implements Observer {
 				sy += height;
 
 				if (shiftVectors[sy][sx] > threshold) {
-					event.getResult().addShiftVector(
-							new ShiftVector(aBx, aBy, bBx - aBx, bBy - aBy,
-									DCTWorkerpool.BLOCK_SIZE));
+					event.getResult()
+							.addShiftVector(
+									new ShiftVector(aBx, aBy, bBx - aBx, bBy
+											- aBy, 16));
 				}
 			}
 		}
@@ -253,12 +251,11 @@ public class RobustMatchPartialDCT extends RobustMatch implements Observer {
 				dctEnd;
 		private final float[][][][] constants;
 		private short[][] blocks;
-		private boolean[] flagged;
 
 		public Worker(final int num, final int threads, final int width,
 				final int height, final int grayscale[][],
 				final float[][][][] constants, short[][] blocks,
-				boolean[] flagged, final int dctStart, final int dctEnd) {
+				final int dctStart, final int dctEnd) {
 			this.num = num;
 			this.threads = threads;
 			this.width = width;
@@ -268,7 +265,6 @@ public class RobustMatchPartialDCT extends RobustMatch implements Observer {
 			this.dctStart = dctStart;
 			this.dctEnd = dctEnd;
 			this.blocks = blocks;
-			this.flagged = flagged;
 
 		}
 
@@ -279,10 +275,39 @@ public class RobustMatchPartialDCT extends RobustMatch implements Observer {
 				for (int yy = 0; yy < width - 15; yy++) {
 					int idx = xx * (width - 15) + yy;
 
-					if (!flagged[idx]) {
+					if (blocks[idx][BLOCK_FLAG_OFFS] == 0) {
+						/*
+						 * The dct matrix is divided into four parts. The value
+						 * of dctStart divides the matrix horizontally as well
+						 * as vertically. The upper left block is already
+						 * calculated, so we have to do the other three
+						 * remaining blocks..
+						 */
 
-						for (int u = dctStart; u < dctEnd; u++) {
+						/*
+						 * Upper right part...
+						 */
+						for (int u = 0; u < dctStart; u++) {
 							for (int v = dctStart; v < dctEnd; v++) {
+
+								float f = 0f;
+								for (int i = 0; i < 16; i++) {
+									for (int j = 0; j < 16; j++) {
+										f += grayscale[(xx + i)][yy + j]
+												* constants[u][v][i][j];
+									}
+								}
+
+								blocks[idx][u * 16 + v] = (short) Math.round(f
+										/ QUANT[u][v]);
+							}
+						}
+
+						/*
+						 * Lower part (left and right together)...
+						 */
+						for (int u = dctStart; u < dctEnd; u++) {
+							for (int v = 0; v < dctEnd; v++) {
 
 								float f = 0f;
 								for (int i = 0; i < 16; i++) {
@@ -306,6 +331,18 @@ public class RobustMatchPartialDCT extends RobustMatch implements Observer {
 			}
 
 		}
+	}
+
+	private int compareDCT(short[] a, short[] b, int[] compareMask) {
+		for (int i : compareMask) {
+			if (a[i] < b[i]) {
+				return -1;
+			} else if (a[i] > b[i]) {
+				return 1;
+			}
+		}
+
+		return 0;
 	}
 
 	private int compareDCT(final short[] a, final short[] b) {
