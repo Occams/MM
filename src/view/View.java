@@ -16,6 +16,7 @@ import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
@@ -49,6 +50,7 @@ import model.algorithms.CopyMoveDetectionFactory;
 import model.algorithms.ICopyMoveDetection;
 import model.algorithms.RobustMatchFastFactory;
 import model.algorithms.RobustMatchMMFactory;
+import model.algorithms.RobustMatchPartialDCT;
 import model.algorithms.RobustMatchPartialDCTFactory;
 import model.algorithms.RobustMatchSimpleFactory;
 
@@ -61,9 +63,10 @@ public class View extends JFrame implements Observer {
 	private JCheckBoxMenuItem multithreading, debugSwitch;
 	private JMenuItem exit, open;
 	private JMenu settings, algorithm;
-	private JRadioButtonMenuItem simple, matrixmult,fast;
+	private JRadioButtonMenuItem simple, matrixmult,fast,partial;
 	private BufferedImage image;
 	private CopyMoveDetectionFactory factory;
+	private List<ShiftVector> vectors = new LinkedList<ShiftVector>();
 
 	private enum ViewState {
 		IDLE, IMG_LOADED, PROCESSING, ABORTING, PROCESSED;
@@ -76,7 +79,7 @@ public class View extends JFrame implements Observer {
 
 			@Override
 			public void run() {
-				new View(new RobustMatchMMFactory());
+				new View(new RobustMatchPartialDCTFactory());
 			}
 		});
 	}
@@ -182,7 +185,7 @@ public class View extends JFrame implements Observer {
 		});
 
 		matrixmult = new JRadioButtonMenuItem("Matrix multiplication", algoI,
-				true);
+				false);
 		matrixmult.addActionListener(new ActionListener() {
 
 			@Override
@@ -207,10 +210,24 @@ public class View extends JFrame implements Observer {
 				
 			}
 		});
+		
+		partial = new JRadioButtonMenuItem("Partial DCT", algoI, true);
+		partial.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if (fast.isSelected()) {
+					log("Switched to partial DCT algorithm");
+					factory = new RobustMatchPartialDCTFactory();
+				}
+				
+			}
+		});
 
 		bg.add(matrixmult);
 		bg.add(simple);
 		bg.add(fast);
+		bg.add(partial);
 		file.add(open);
 		file.addSeparator();
 		file.add(exit);
@@ -219,6 +236,7 @@ public class View extends JFrame implements Observer {
 		algorithm.add(matrixmult);
 		algorithm.add(simple);
 		algorithm.add(fast);
+		algorithm.add(partial);
 		menubar.add(file);
 		menubar.add(settings);
 		menubar.add(algorithm);
@@ -238,7 +256,7 @@ public class View extends JFrame implements Observer {
 			panel.start.setEnabled(true);
 			panel.quality.setEnabled(true);
 			panel.threshold.setEnabled(true);
-			panel.minLength.setEnabled(true);
+			panel.minLength.setEnabled(false);
 			state = ViewState.IMG_LOADED;
 		} catch (IOException e) {
 			log("Error: Could not load image file\n");
@@ -311,10 +329,11 @@ public class View extends JFrame implements Observer {
 					settings.setEnabled(true);
 					algorithm.setEnabled(true);
 					open.setEnabled(true);
+					vectors = event.getResult().getVectors();
 					log("Found a total of "
-							+ event.getResult().getVectors().size()
+							+ vectors.size()
 							+ " shiftvectors");
-					displayResult(event.getResult().getVectors());
+					displayResult();
 				}
 				break;
 			default:
@@ -326,7 +345,7 @@ public class View extends JFrame implements Observer {
 		}
 	}
 
-	private void displayResult(List<ShiftVector> vectors) {
+	private void displayResult() {
 		BufferedImage i = new BufferedImage(image.getWidth(),
 				image.getHeight(), BufferedImage.TYPE_INT_ARGB);
 		BufferedImage i_alt = new BufferedImage(image.getWidth(),
@@ -339,6 +358,7 @@ public class View extends JFrame implements Observer {
 		g_alt.drawImage(image, 0, 0, null);
 
 		for (ShiftVector v : vectors) {
+			if (getVLenght(v.getDx(), v.getDy()) >= panel.minLength.getValue()) {
 			g.setColor(red);
 			g.fillRect(v.getSx(), v.getSy(), v.getBs(), v.getBs());
 			g.setColor(green);
@@ -347,10 +367,15 @@ public class View extends JFrame implements Observer {
 			g_alt.setColor(Color.WHITE);
 			g_alt.drawLine(v.getSx(), v.getSy(), v.getSx() + v.getDx(),
 					v.getSy() + v.getDy());
+			}
 		}
 
 		g.dispose();
 		panel.imagePanel.setImages(new BufferedImage[] { i, i_alt, image });
+	}
+	
+	private double getVLenght(final int x, final int y) {
+		return Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
 	}
 
 	public class ViewPanel extends JPanel {
@@ -427,11 +452,9 @@ public class View extends JFrame implements Observer {
 							log("Invoked algorithm with a total number of "
 									+ cores + " threads");
 							log("Settings: Quality = " + getQuality()
-									+ " , Threshold = " + threshold.getValue()
-									+ " , Minimum vector length = "
-									+ minLength.getValue());
+									+ " , Threshold = " + threshold.getValue());
 							algo.detect(image, getQuality(),
-									threshold.getValue(), minLength.getValue(),
+									threshold.getValue(),
 									cores);
 							log.setEditable(false);
 						}
@@ -487,6 +510,7 @@ public class View extends JFrame implements Observer {
 				public void stateChanged(ChangeEvent e) {
 					minLengthL.setText("Min. Length [" + minLength.getValue()
 							+ "]:");
+					displayResult();
 				}
 			});
 

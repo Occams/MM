@@ -32,8 +32,7 @@ public class RobustMatchFast extends RobustMatch implements Observer {
 	}
 
 	@Override
-	public void detect(BufferedImage input, float quality, int threshold,
-			int minLength, int threads) {
+	public void detect(BufferedImage input, float quality, int threshold, int threads) {
 
 		if (!checkImage(input)) {
 			setChanged();
@@ -145,7 +144,6 @@ public class RobustMatchFast extends RobustMatch implements Observer {
 				int sx = b1.getPos_x() - b2.getPos_x();
 				int sy = b1.getPos_y() - b2.getPos_y();
 
-				if (getVLenght(sx, sy) > minLength) {
 
 					if (sx < 0) {
 						sx = -sx;
@@ -158,7 +156,6 @@ public class RobustMatchFast extends RobustMatch implements Observer {
 					sy += height;
 
 					shiftVectors[sy * width + sx]++;
-				}
 			}
 		}
 
@@ -185,7 +182,6 @@ public class RobustMatchFast extends RobustMatch implements Observer {
 				int sx = b1.getPos_x() - b2.getPos_x();
 				int sy = b1.getPos_y() - b2.getPos_y();
 
-				if (getVLenght(sx, sy) > minLength) {
 					if (sx < 0) {
 						sx = -sx;
 						sy = -sy;
@@ -203,7 +199,6 @@ public class RobustMatchFast extends RobustMatch implements Observer {
 												.getPos_y() + b2.getPos_y(),
 										DCTWorkerpool.BLOCK_SIZE));
 					}
-				}
 			}
 		}
 

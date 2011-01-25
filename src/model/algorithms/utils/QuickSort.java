@@ -1,40 +1,40 @@
 package model.algorithms.utils;
 
 public class QuickSort {
-	
+
 	public static void sort(float a[][]) {
 		qSort(a, 0, a.length - 1);
 	}
 
 	private static void qSort(float a[][], int left, int right) {
-		if (left < right) {
-			int i = partition(a, left, right);
+		int i = partition(a, left, right);
+		if (left < i - 1)
 			qSort(a, left, i - 1);
-			qSort(a, i + 1, right);
-		}
+		if (i < right)
+			qSort(a, i, right);
 	}
 
 	private static int partition(float a[][], int left, int right) {
 		int i, j;
 		float[] tmp, pivot;
-		pivot = a[right];
+		pivot = a[(right + left) / 2];
 		i = left;
-		j = right - 1;
-		
+		j = right;
+
 		while (i <= j) {
-			if (compare(a[i], pivot) > 0) {
+			while (compare(a[i], pivot) < 0)
+				i++;
+			while (compare(a[j], pivot) > 0)
+				j--;
+			if (i <= j) {
 
 				tmp = a[i];
 				a[i] = a[j];
 				a[j] = tmp;
-				j--;
-			} else
 				i++;
+				j--;
+			}
 		}
-
-		tmp = a[i];
-		a[i] = a[right];
-		a[right] = tmp;
 
 		return i;
 	}

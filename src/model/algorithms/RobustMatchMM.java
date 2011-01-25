@@ -40,8 +40,7 @@ public class RobustMatchMM extends RobustMatch implements Observer {
 	 * notified, so one knows what parts are most likely copy-moved.
 	 */
 	@Override
-	public void detect(BufferedImage input, float quality, int threshold,
-			int minLength, int threads) {
+	public void detect(BufferedImage input, float quality, int threshold, int threads) {
 
 		if (!checkImage(input)) {
 			setChanged();
@@ -108,7 +107,6 @@ public class RobustMatchMM extends RobustMatch implements Observer {
 			if (b1.compareTo(b2) == 0) {
 				int sx = b1.getPos_x() - b2.getPos_x();
 				int sy = b1.getPos_y() - b2.getPos_y();
-				if (getVLenght(sx, sy) >= minLength) {
 					if (sx < 0) {
 						sx = -sx;
 						sy = -sy;
@@ -121,7 +119,7 @@ public class RobustMatchMM extends RobustMatch implements Observer {
 
 					shiftVectors[sy * width + sx]++;
 				}
-			}
+
 		}
 
 		setChanged();
@@ -147,7 +145,6 @@ public class RobustMatchMM extends RobustMatch implements Observer {
 				int sx = b1.getPos_x() - b2.getPos_x();
 				int sy = b1.getPos_y() - b2.getPos_y();
 
-				if (getVLenght(sx, sy) >= minLength) {
 					if (sx < 0) {
 						sx = -sx;
 						sy = -sy;
@@ -165,7 +162,6 @@ public class RobustMatchMM extends RobustMatch implements Observer {
 												.getPos_y() + b2.getPos_y(),
 										DCTWorkerpool.BLOCK_SIZE));
 					}
-				}
 			}
 		}
 
