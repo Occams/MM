@@ -2,11 +2,11 @@ package model.algorithms.utils;
 
 public class QuickSort {
 
-	public static void sort(float a[][], int[] compareMask) {
+	public static void sort(short a[][], int[] compareMask) {
 		qSort(a, 0, a.length - 1, compareMask);
 	}
 
-	private static void qSort(float a[][], int left, int right,
+	private static void qSort(short a[][], int left, int right,
 			int[] compareMask) {
 		int i = partition(a, left, right, compareMask);
 		
@@ -16,10 +16,10 @@ public class QuickSort {
 			qSort(a, i, right, compareMask);
 	}
 
-	private static int partition(float a[][], int left, int right,
+	private static int partition(short a[][], int left, int right,
 			int[] compareMask) {
 		int i, j;
-		float[] tmp, pivot;
+		short[] tmp, pivot;
 		pivot = a[(right + left) / 2];
 		i = left;
 		j = right;
@@ -41,7 +41,7 @@ public class QuickSort {
 		return i;
 	}
 
-	private static int compare(final float[] a, final float[] b, int[] compareMask) {
+	private static int compare(final short[] a, final short[] b, int[] compareMask) {
 		for (int i = 0; i < compareMask.length; i++) {
 			if (a[compareMask[i]] < b[compareMask[i]]) {
 				return -1;

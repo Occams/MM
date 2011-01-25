@@ -67,13 +67,13 @@ public class RobustMatchPartialDCT extends RobustMatch implements Observer {
 				"Precomputed constant values in " + takeTime() + "ms"));
 
 		/* Calculate 4x4 DCTs of each block */
-		float[][] blocks = new float[(width - 15) * (height - 15)][258];
+		short[][] blocks = new short[(width - 15) * (height - 15)][258];
 		boolean[] flagged = new boolean[blocks.length];
 
 		/* Flag blocks */
 		for (int i = 0; i < blocks.length; i++) {
-			blocks[i][256] = i % (width - 15);
-			blocks[i][257] = (int) i / (width - 15);
+			blocks[i][256] = (short) (i % (width - 15));
+			blocks[i][257] = (short) ( i / (width - 15));
 		}
 
 		Thread[] tA = new Thread[threads];
@@ -192,8 +192,8 @@ public class RobustMatchPartialDCT extends RobustMatch implements Observer {
 		int shiftVectors[][] = new int[height * 2][width];
 
 		for (int i = 0; i < blocks.length - 1; i++) {
-			float[] a = blocks[i];
-			float[] b = blocks[i + 1];
+			short[] a = blocks[i];
+			short[] b = blocks[i + 1];
 
 			if (!flagged[i] && compareDCT(a, b) == 0) {
 				int sx = (int) (a[256] - b[256]);
@@ -220,8 +220,8 @@ public class RobustMatchPartialDCT extends RobustMatch implements Observer {
 		 * Collect shiftvectors
 		 */
 		for (int i = 0; i < blocks.length - 1; i++) {
-			float[] a = blocks[i];
-			float[] b = blocks[i + 1];
+			short[] a = blocks[i];
+			short[] b = blocks[i + 1];
 
 			if (!flagged[i] && compareDCT(a, b) == 0) {
 				int aBy = (int) a[257], aBx = (int) a[256];
@@ -252,12 +252,12 @@ public class RobustMatchPartialDCT extends RobustMatch implements Observer {
 		private final int num, threads, width, height, grayscale[][], dctStart,
 				dctEnd;
 		private final float[][][][] constants;
-		private float[][] blocks;
+		private short[][] blocks;
 		private boolean[] flagged;
 
 		public Worker(final int num, final int threads, final int width,
 				final int height, final int grayscale[][],
-				final float[][][][] constants, float[][] blocks,
+				final float[][][][] constants, short[][] blocks,
 				boolean[] flagged, final int dctStart, final int dctEnd) {
 			this.num = num;
 			this.threads = threads;
@@ -292,7 +292,7 @@ public class RobustMatchPartialDCT extends RobustMatch implements Observer {
 									}
 								}
 
-								blocks[idx][u * 16 + v] = (float) Math.round(f
+								blocks[idx][u * 16 + v] = (short) Math.round(f
 										/ QUANT[u][v]);
 							}
 						}
@@ -308,7 +308,7 @@ public class RobustMatchPartialDCT extends RobustMatch implements Observer {
 		}
 	}
 
-	private int compareDCT(final float[] a, final float[] b) {
+	private int compareDCT(final short[] a, final short[] b) {
 		for (int i = 0; i < 256; i++) {
 			if (a[i] < b[i]) {
 				return -1;
@@ -320,7 +320,7 @@ public class RobustMatchPartialDCT extends RobustMatch implements Observer {
 		return 0;
 	}
 
-	private void bubblesortBlocks(float[][] blocks) {
+	private void bubblesortBlocks(short[][] blocks) {
 		int n = blocks.length;
 		boolean change = false;
 
@@ -330,7 +330,7 @@ public class RobustMatchPartialDCT extends RobustMatch implements Observer {
 			for (int i = 0; i < n - 1; i++) {
 				if (compareDCT(blocks[i], blocks[i + 1]) > 0) {
 					change = true;
-					float[] tmp = blocks[i];
+					short[] tmp = blocks[i];
 					blocks[i] = blocks[i + 1];
 					blocks[i + 1] = tmp;
 				}
