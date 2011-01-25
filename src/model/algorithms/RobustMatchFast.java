@@ -59,13 +59,15 @@ public class RobustMatchFast extends RobustMatch implements Observer {
 		final float[][][][] constants = new float[16][16][16][16];
 
 		for (int u = 0; u < 16; u++) {
-			float alphau = (float) (u == 0 ? Math.sqrt(1.0f / 16.0f) : Math.sqrt(2.0f / 16.0f));
+			float alphau = (float) (u == 0 ? Math.sqrt(1.0f / 16.0f) : Math
+					.sqrt(2.0f / 16.0f));
 			for (int v = 0; v < 16; v++) {
-				float alphav = (float) (v == 0 ? Math.sqrt(1.0f / 16.0f) : Math.sqrt(2.0f / 16.0f));
+				float alphav = (float) (v == 0 ? Math.sqrt(1.0f / 16.0f) : Math
+						.sqrt(2.0f / 16.0f));
 				for (int i = 0; i < 16; i++) {
 					for (int j = 0; j < 16; j++) {
 						constants[u][v][i][j] = (float) (alphau * alphav
-								* Math.cos((Math.PI * ( i + 0.5f) * u) / 16.0f) * Math
+								* Math.cos((Math.PI * (i + 0.5f) * u) / 16.0f) * Math
 								.cos((Math.PI * (i * j + 0.5f) * v) / 16.0f));
 					}
 				}
@@ -77,7 +79,7 @@ public class RobustMatchFast extends RobustMatch implements Observer {
 		int amount = 1;
 		do {
 			amount *= 4;
-			
+
 			/*
 			 * Calculate the dcts of each block...
 			 */
@@ -101,8 +103,9 @@ public class RobustMatchFast extends RobustMatch implements Observer {
 			}
 
 			setChanged();
-			notifyObservers(new Event(Event.EventType.STATUS,
-					amount+"x"+amount+"-DCT of each block was calculated in " + takeTime() + "ms"));
+			notifyObservers(new Event(Event.EventType.STATUS, amount + "x"
+					+ amount + "-DCT of each block was calculated in "
+					+ takeTime() + "ms"));
 
 			/*
 			 * Sort the dcts lexicographically...
@@ -110,25 +113,27 @@ public class RobustMatchFast extends RobustMatch implements Observer {
 			Collections.sort(dcts);
 
 			/*
-			 * Do same elements into the refine list...
+			 * Do equal elements into the refine list...
 			 */
 			refineList.clear();
-			int putLast = -1;
-			for (int i = 0; i < dcts.size() - 1; i++) {
-				if (dcts.get(i).compareTo(dcts.get(i + 1)) == 0) {
-					if (putLast != i) {
-						refineList.add(dcts.get(i));
+			if (amount < 16) {
+				int putLast = -1;
+				for (int i = 0; i < dcts.size() - 1; i++) {
+					if (dcts.get(i).compareTo(dcts.get(i + 1)) == 0) {
+						if (putLast != i) {
+							refineList.add(dcts.get(i));
+						}
+						refineList.add(dcts.get(i + 1));
+						putLast = i + 1;
 					}
-					refineList.add(dcts.get(i + 1));
-					putLast = i + 1;
 				}
 			}
 
 			setChanged();
 			notifyObservers(new Event(Event.EventType.STATUS,
-					"Lexicographically sorted all "+amount+"x"+amount+"-DCTs in " + takeTime() + "ms"));
-
-		} while (amount < 16 || refineList.isEmpty());
+					"Lexicographically sorted all " + amount + "x" + amount
+							+ "-DCTs in " + takeTime() + "ms"));
+		} while (!abort && (amount < 16 || !refineList.isEmpty()));
 
 		/*
 		 * Collect vectors... The Shift Vector is an array double of the
@@ -200,7 +205,8 @@ public class RobustMatchFast extends RobustMatch implements Observer {
 						event.getResult().addShiftVector(
 								new ShiftVector(b1.getPos_x(), b1.getPos_y(),
 										-b1.getPos_x() + b2.getPos_x(), -b1
-												.getPos_y() + b2.getPos_y(),
+												.getPos_y()
+												+ b2.getPos_y(),
 										DCTWorkerpool.BLOCK_SIZE));
 					}
 				}
@@ -268,18 +274,18 @@ public class RobustMatchFast extends RobustMatch implements Observer {
 					int xx = b.getPos_x();
 					int yy = b.getPos_y();
 
-					for (int u = amount/2; u < amount; u++) {
-						for (int v = amount/2; v < amount; v++) {
+					for (int u = amount / 2; u < amount; u++) {
+						for (int v = amount / 2; v < amount; v++) {
 							float f = 0f;
 							for (int i = 0; i < 16; i++) {
 								for (int j = 0; j < 16; j++) {
-										f += grayscale[(yy + i)][xx + j]
-												* constants[u][v][i][j];
+									f += grayscale[(yy + i)][xx + j]
+											* constants[u][v][i][j];
 								}
 							}
 
-							dct[u * 16 + v] = (float) Math.rint(f
-									/ QUANT[u][v]);
+							dct[u * 16 + v] = (float) Math
+									.rint(f / QUANT[u][v]);
 						}
 					}
 
