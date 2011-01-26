@@ -2,7 +2,9 @@ package model.algorithms;
 
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Observable;
 import java.util.Observer;
 
@@ -107,9 +109,9 @@ public class RobustMatchPartialDCT extends RobustMatch implements Observer {
 				49, 50, 51 };
 
 		
-		testSort(blocks);
-
-		
+		//testSort(blocks);
+		//QuickSort.sort(blocks, compareMask);
+		Arrays.sort(blocks,new BlockComparator(compareMask));
 		
 		setChanged();
 		notifyObservers(new Event(Event.EventType.STATUS,
@@ -139,7 +141,6 @@ public class RobustMatchPartialDCT extends RobustMatch implements Observer {
 		notifyObservers(new Event(Event.EventType.STATUS,
 				"Number of unique DCT blocks (" + c + ") computed in "
 						+ takeTime() + " ms"));
-
 		/* Required for progress notifications. */
 		secondStep = true;
 
@@ -173,7 +174,9 @@ public class RobustMatchPartialDCT extends RobustMatch implements Observer {
 		for (int i = 0; i < 256; i++)
 			compareMask[i] = i;
 
-		testSort(blocks);
+		//testSort(blocks);
+		//QuickSort.sort(blocks, compareMask);
+		Arrays.sort(blocks,new BlockComparator(compareMask));
 		
 		setChanged();
 		notifyObservers(new Event(Event.EventType.STATUS,
@@ -403,11 +406,11 @@ public class RobustMatchPartialDCT extends RobustMatch implements Observer {
 	
 	private void testSort(short[][] blocks) {
 		ArrayList<ShortBlock> test = new ArrayList<RobustMatchPartialDCT.ShortBlock>();
-		for (int i = 0; i < blocks.length - 1; i++) {
+		for (int i = 0; i < blocks.length; i++) {
 			test.add(i, new ShortBlock(blocks[i]));
 		}
 		Collections.sort(test);
-		for (int i = 0; i < blocks.length - 1; i++) {
+		for (int i = 0; i < blocks.length; i++) {
 			blocks[i] = test.get(i).getBlock();
 		}
 	}
@@ -441,5 +444,26 @@ public class RobustMatchPartialDCT extends RobustMatch implements Observer {
 			this.block = block;
 		}
 
+	}
+	
+	private class BlockComparator implements Comparator<short[]> {
+		private int[] mask;
+		
+		public BlockComparator(int[] mask) {
+			this.mask = mask;
+		}
+		@Override
+		public int compare(short[] a, short[] b) {
+			
+			for (int i : mask) {
+				if (a[i] < b[i])
+					return -1;
+				else if (a[i] > b[i])
+					return 1;
+			}
+			
+			return 0;
+		}
+		
 	}
 }
