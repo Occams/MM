@@ -338,10 +338,12 @@ public class View extends JFrame implements Observer {
 		Graphics g = i.getGraphics(), g_alt = i_alt.getGraphics();
 		Color red = new Color(1, 0, 0, 0.25f);
 		Color green = new Color(0, 1, 0, 0.25f);
+		Color white = new Color(1,1,1,0.25f);
 
 		g.drawImage(image, 0, 0, null);
 		g_alt.drawImage(image, 0, 0, null);
-
+		g_alt.setColor(white);
+		
 		for (ShiftVector v : vectors) {
 			if (getVLenght(v.getDx(), v.getDy()) >= panel.minLength.getValue()) {
 			g.setColor(red);
@@ -349,7 +351,6 @@ public class View extends JFrame implements Observer {
 			g.setColor(green);
 			g.fillRect(v.getSx() + v.getDx(), v.getSy() + v.getDy(), v.getBs(),
 					v.getBs());
-			g_alt.setColor(Color.WHITE);
 			g_alt.drawLine(v.getSx(), v.getSy(), v.getSx() + v.getDx(),
 					v.getSy() + v.getDy());
 			}

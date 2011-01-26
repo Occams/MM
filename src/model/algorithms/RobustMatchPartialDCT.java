@@ -281,7 +281,8 @@ public class RobustMatchPartialDCT extends RobustMatch implements Observer {
 
 		@Override
 		public void run() {
-			System.out.println("DCT Start = " + dctStart + "; End = " + dctEnd);
+			//System.out.println("DCT Start = " + dctStart + "; End = " + dctEnd);
+			
 			for (int idx = num; idx < blocks.length && !abort; idx += threads) {
 
 				if (blocks[idx][BLOCK_FLAG_OFFS] == 0) {
@@ -350,10 +351,10 @@ public class RobustMatchPartialDCT extends RobustMatch implements Observer {
 					}
 				}
 
-				// if (num == threads - 1 && xx % num == 0) {
-				// setChanged();
-				// notifyObservers((float) xx / (float) (height - 15));
-				// }
+				 if (num == threads - 1 && idx % num == 0) {
+				 setChanged();
+				 notifyObservers((float) idx / (float) blocks.length);
+				 }
 			}
 
 		}
