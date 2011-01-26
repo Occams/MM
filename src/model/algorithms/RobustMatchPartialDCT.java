@@ -96,6 +96,9 @@ public class RobustMatchPartialDCT extends RobustMatch implements Observer {
 				e.printStackTrace();
 			}
 		}
+		
+		if (abort)
+			return;
 
 		setChanged();
 		notifyObservers(new Event(Event.EventType.STATUS,
@@ -162,6 +165,9 @@ public class RobustMatchPartialDCT extends RobustMatch implements Observer {
 				e.printStackTrace();
 			}
 		}
+		
+		if (abort)
+			return;
 
 		setChanged();
 		notifyObservers(new Event(Event.EventType.STATUS,
@@ -220,6 +226,8 @@ public class RobustMatchPartialDCT extends RobustMatch implements Observer {
 		notifyObservers(new Event(Event.EventType.STATUS,
 				"Calculated shift vectors in " + takeTime() + "ms"));
 
+		if (abort)
+			return;
 		Event event = new Event(EventType.COPY_MOVE_DETECTION_FINISHED,
 				new Result(System.currentTimeMillis() - start));
 
@@ -252,6 +260,8 @@ public class RobustMatchPartialDCT extends RobustMatch implements Observer {
 			}
 		}
 
+		if(abort)
+			return;
 		setChanged();
 		notifyObservers(event);
 	}

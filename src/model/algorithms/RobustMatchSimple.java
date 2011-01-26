@@ -76,7 +76,9 @@ public class RobustMatchSimple extends RobustMatch implements Observer {
 				e.printStackTrace();
 			}
 		}
-
+		
+		if(abort)
+			return;
 		setChanged();
 		notifyObservers(new Event(Event.EventType.STATUS,
 				"DCT of each block were calculated in " + takeTime() + "ms"));
@@ -129,6 +131,8 @@ public class RobustMatchSimple extends RobustMatch implements Observer {
 		 */
 		long end = System.currentTimeMillis();
 
+		if(abort)
+			return;
 		Event event = new Event(EventType.COPY_MOVE_DETECTION_FINISHED,
 				new Result(end - start));
 		/*
@@ -162,6 +166,8 @@ public class RobustMatchSimple extends RobustMatch implements Observer {
 			}
 		}
 
+		if(abort)
+			return;
 		setChanged();
 		notifyObservers(event);
 	}

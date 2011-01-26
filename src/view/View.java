@@ -112,6 +112,7 @@ public class View extends JFrame implements Observer {
 		ImageIcon algoI = new ImageIcon("icons/algo.png");
 		menubar = new JMenuBar();
 		JMenu file = new JMenu("File");
+		JMenu help = new JMenu("Help");
 		file.setMnemonic(KeyEvent.VK_F);
 		settings = new JMenu("Settings");
 		settings.setMnemonic(KeyEvent.VK_S);
@@ -225,6 +226,7 @@ public class View extends JFrame implements Observer {
 		menubar.add(file);
 		menubar.add(settings);
 		menubar.add(algorithm);
+		menubar.add(help);
 		log("Application started");
 	}
 
