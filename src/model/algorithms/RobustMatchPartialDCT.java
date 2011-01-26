@@ -286,7 +286,7 @@ public class RobustMatchPartialDCT extends RobustMatch implements Observer {
 							for (int u = dctStart; u < dctEnd; u++) {
 								for (int v = dctStart; v < dctEnd; v++) {
 
-									double f = 0;
+									float f = 0;
 									for (int i = 0; i < 16; i++) {
 										for (int j = 0; j < 16; j++) {
 											f += grayscale[(xx + i)][yy + j]
@@ -306,7 +306,7 @@ public class RobustMatchPartialDCT extends RobustMatch implements Observer {
 							for (int u = 0; u < dctStart; u++) {
 								for (int v = dctStart; v < dctEnd; v++) {
 
-									double f = 0;
+									float f = 0;
 									for (int i = 0; i < 16; i++) {
 										for (int j = 0; j < 16; j++) {
 											f += grayscale[(xx + i)][yy + j]
@@ -325,7 +325,7 @@ public class RobustMatchPartialDCT extends RobustMatch implements Observer {
 							for (int u = dctStart; u < dctEnd; u++) {
 								for (int v = 0; v < dctEnd; v++) {
 
-									double f = 0;
+									float f = 0;
 									for (int i = 0; i < 16; i++) {
 										for (int j = 0; j < 16; j++) {
 											f += grayscale[(xx + i)][yy + j]

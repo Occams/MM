@@ -360,7 +360,8 @@ public class View extends JFrame implements Observer {
 	}
 	
 	private double getVLenght(final int x, final int y) {
-		return Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
+		// return Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
+		return Math.max(Math.abs(x), Math.abs(y));
 	}
 
 	public class ViewPanel extends JPanel {
