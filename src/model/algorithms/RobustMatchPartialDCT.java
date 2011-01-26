@@ -108,11 +108,10 @@ public class RobustMatchPartialDCT extends RobustMatch implements Observer {
 		int[] compareMask = { 0, 1, 2, 3, 16, 17, 18, 19, 32, 33, 34, 35, 48,
 				49, 50, 51 };
 
-		
-		//testSort(blocks);
-		//QuickSort.sort(blocks, compareMask);
-		Arrays.sort(blocks,new BlockComparator(compareMask));
-		
+		// testSort(blocks);
+		// QuickSort.sort(blocks, compareMask);
+		Arrays.sort(blocks, new BlockComparator(compareMask));
+
 		setChanged();
 		notifyObservers(new Event(Event.EventType.STATUS,
 				"Lexicographically sorted all 4x4 DCTs in " + takeTime() + "ms"));
@@ -141,7 +140,7 @@ public class RobustMatchPartialDCT extends RobustMatch implements Observer {
 		notifyObservers(new Event(Event.EventType.STATUS,
 				"Number of unique DCT blocks (" + c + ") computed in "
 						+ takeTime() + " ms"));
-		
+
 		/* Required for progress notifications. */
 		secondStep = true;
 
@@ -170,15 +169,15 @@ public class RobustMatchPartialDCT extends RobustMatch implements Observer {
 						+ takeTime() + "ms"));
 
 		/* Sort the 16x16 DCTs of each block */
-		compareMask = new int[256];
+		compareMask = new int[257];
 
-		for (int i = 0; i < 256; i++)
+		for (int i = 0; i < 257; i++)
 			compareMask[i] = i;
 
-		//testSort(blocks);
-		//QuickSort.sort(blocks, compareMask);
-		Arrays.sort(blocks,new BlockComparator(compareMask));
-		
+		// testSort(blocks);
+		// QuickSort.sort(blocks, compareMask);
+		Arrays.sort(blocks, new BlockComparator(compareMask));
+
 		setChanged();
 		notifyObservers(new Event(Event.EventType.STATUS,
 				"Lexicographically sorted all non-unique 16x16 DCTs in "
@@ -282,80 +281,79 @@ public class RobustMatchPartialDCT extends RobustMatch implements Observer {
 
 		@Override
 		public void run() {
+			System.out.println("DCT Start = " + dctStart + "; End = " + dctEnd);
+			for (int idx = num; idx < blocks.length && !abort; idx += threads) {
 
-			for (int xx = num; xx < height - 15 && !abort; xx += threads) {
-				for (int yy = 0; yy < width - 15; yy++) {
-					int idx = xx * (width - 15) + yy;
+				if (blocks[idx][BLOCK_FLAG_OFFS] == 0) {
+					int xx = blocks[idx][BLOCK_Y_OFFS];
+					int yy = blocks[idx][BLOCK_X_OFFS];
+					/*
+					 * The dct matrix is divided into four parts. The value of
+					 * dctStart divides the matrix horizontally as well as
+					 * vertically.
+					 */
+					if (!this.complete) {
+						for (int u = dctStart; u < dctEnd; u++) {
+							for (int v = dctStart; v < dctEnd; v++) {
 
-					if (blocks[idx][BLOCK_FLAG_OFFS] == 0) {
+								float f = 0;
+								for (int i = 0; i < 16; i++) {
+									for (int j = 0; j < 16; j++) {
+										f += grayscale[(xx + i)][yy + j]
+												* constants[u][v][i][j];
+									}
+								}
+
+								blocks[idx][u * 16 + v] = (short) Math.round(f
+										/ QUANT[u][v]);
+							}
+						}
+					} else {
+
 						/*
-						 * The dct matrix is divided into four parts. The value
-						 * of dctStart divides the matrix horizontally as well
-						 * as vertically.
+						 * Upper right part...
 						 */
-						if (!this.complete) {
-							for (int u = dctStart; u < dctEnd; u++) {
-								for (int v = dctStart; v < dctEnd; v++) {
+						for (int u = 0; u < dctStart; u++) {
+							for (int v = dctStart; v < dctEnd; v++) {
 
-									float f = 0;
-									for (int i = 0; i < 16; i++) {
-										for (int j = 0; j < 16; j++) {
-											f += grayscale[(xx + i)][yy + j]
-													* constants[u][v][i][j];
-										}
+								float f = 0;
+								for (int i = 0; i < 16; i++) {
+									for (int j = 0; j < 16; j++) {
+										f += grayscale[(xx + i)][yy + j]
+												* constants[u][v][i][j];
 									}
-
-									blocks[idx][u * 16 + v] = (short) Math
-											.round(f / QUANT[u][v]);
 								}
+
+								blocks[idx][u * 16 + v] = (short) Math.round(f
+										/ QUANT[u][v]);
 							}
-						} else {
+						}
 
-							/*
-							 * Upper right part...
-							 */
-							for (int u = 0; u < dctStart; u++) {
-								for (int v = dctStart; v < dctEnd; v++) {
+						/*
+						 * Lower part (left and right together)...
+						 */
+						for (int u = dctStart; u < dctEnd; u++) {
+							for (int v = 0; v < dctEnd; v++) {
 
-									float f = 0;
-									for (int i = 0; i < 16; i++) {
-										for (int j = 0; j < 16; j++) {
-											f += grayscale[(xx + i)][yy + j]
-													* constants[u][v][i][j];
-										}
+								float f = 0;
+								for (int i = 0; i < 16; i++) {
+									for (int j = 0; j < 16; j++) {
+										f += grayscale[(xx + i)][yy + j]
+												* constants[u][v][i][j];
 									}
-
-									blocks[idx][u * 16 + v] = (short) Math
-											.round(f / QUANT[u][v]);
 								}
-							}
 
-							/*
-							 * Lower part (left and right together)...
-							 */
-							for (int u = dctStart; u < dctEnd; u++) {
-								for (int v = 0; v < dctEnd; v++) {
-
-									float f = 0;
-									for (int i = 0; i < 16; i++) {
-										for (int j = 0; j < 16; j++) {
-											f += grayscale[(xx + i)][yy + j]
-													* constants[u][v][i][j];
-										}
-									}
-
-									blocks[idx][u * 16 + v] = (short) Math
-											.round(f / QUANT[u][v]);
-								}
+								blocks[idx][u * 16 + v] = (short) Math.round(f
+										/ QUANT[u][v]);
 							}
 						}
 					}
 				}
 
-				if (num == threads-1 && xx % num == 0) {
-					setChanged();
-					notifyObservers((float) xx / (float) (height - 15));
-				}
+				// if (num == threads - 1 && xx % num == 0) {
+				// setChanged();
+				// notifyObservers((float) xx / (float) (height - 15));
+				// }
 			}
 
 		}
@@ -404,7 +402,7 @@ public class RobustMatchPartialDCT extends RobustMatch implements Observer {
 			n--;
 		} while (n > 1 && change);
 	}
-	
+
 	private void testSort(short[][] blocks) {
 		ArrayList<ShortBlock> test = new ArrayList<RobustMatchPartialDCT.ShortBlock>();
 		for (int i = 0; i < blocks.length; i++) {
@@ -442,25 +440,26 @@ public class RobustMatchPartialDCT extends RobustMatch implements Observer {
 		}
 
 	}
-	
+
 	private class BlockComparator implements Comparator<short[]> {
 		private int[] mask;
-		
+
 		public BlockComparator(int[] mask) {
 			this.mask = mask;
 		}
+
 		@Override
 		public int compare(short[] a, short[] b) {
-			
+
 			for (int i : mask) {
 				if (a[i] < b[i])
 					return -1;
 				else if (a[i] > b[i])
 					return 1;
 			}
-			
+
 			return 0;
 		}
-		
+
 	}
 }
