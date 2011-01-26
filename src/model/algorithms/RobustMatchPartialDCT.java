@@ -77,7 +77,7 @@ public class RobustMatchPartialDCT extends RobustMatch implements Observer {
 
 		for (int t = 0; t < threads; t++) {
 			Worker w = new Worker(t, threads, width, height, grayscale,
-					constants, blocks, 0, 4);
+					constants, blocks, 0, 4, false);
 			w.addObserver(this);
 			Thread th = new Thread(w);
 			tA[t] = th;
@@ -140,7 +140,7 @@ public class RobustMatchPartialDCT extends RobustMatch implements Observer {
 		/* Calculate 16x16 DCTs of non-unique blocks */
 		for (int t = 0; t < threads; t++) {
 			Worker w = new Worker(t, threads, width, height, grayscale,
-					constants, blocks, 4, 16);
+					constants, blocks, 4, 16, true);
 			w.addObserver(this);
 			Thread th = new Thread(w);
 			tA[t] = th;
@@ -251,11 +251,12 @@ public class RobustMatchPartialDCT extends RobustMatch implements Observer {
 				dctEnd;
 		private final float[][][][] constants;
 		private short[][] blocks;
+		private boolean complete;
 
 		public Worker(final int num, final int threads, final int width,
 				final int height, final int grayscale[][],
 				final float[][][][] constants, short[][] blocks,
-				final int dctStart, final int dctEnd) {
+				final int dctStart, final int dctEnd, final boolean complete) {
 			this.num = num;
 			this.threads = threads;
 			this.width = width;
@@ -265,7 +266,7 @@ public class RobustMatchPartialDCT extends RobustMatch implements Observer {
 			this.dctStart = dctStart;
 			this.dctEnd = dctEnd;
 			this.blocks = blocks;
-
+			this.complete = complete;
 		}
 
 		@Override
@@ -279,46 +280,62 @@ public class RobustMatchPartialDCT extends RobustMatch implements Observer {
 						/*
 						 * The dct matrix is divided into four parts. The value
 						 * of dctStart divides the matrix horizontally as well
-						 * as vertically. The upper left block is already
-						 * calculated, so we have to do the other three
-						 * remaining blocks..
+						 * as vertically.
 						 */
+						if (!this.complete) {
+							for (int u = dctStart; u < dctEnd; u++) {
+								for (int v = dctStart; v < dctEnd; v++) {
 
-						/*
-						 * Upper right part...
-						 */
-						for (int u = 0; u < dctStart; u++) {
-							for (int v = dctStart; v < dctEnd; v++) {
-
-								float f = 0f;
-								for (int i = 0; i < 16; i++) {
-									for (int j = 0; j < 16; j++) {
-										f += grayscale[(xx + i)][yy + j]
-												* constants[u][v][i][j];
+									double f = 0;
+									for (int i = 0; i < 16; i++) {
+										for (int j = 0; j < 16; j++) {
+											f += grayscale[(xx + i)][yy + j]
+													* constants[u][v][i][j];
+										}
 									}
-								}
 
-								blocks[idx][u * 16 + v] = (short) Math.round(f
-										/ QUANT[u][v]);
+									blocks[idx][u * 16 + v] = (short) Math
+											.round(f / QUANT[u][v]);
+								}
 							}
-						}
+						} else {
 
-						/*
-						 * Lower part (left and right together)...
-						 */
-						for (int u = dctStart; u < dctEnd; u++) {
-							for (int v = 0; v < dctEnd; v++) {
+							/*
+							 * Upper right part...
+							 */
+							for (int u = 0; u < dctStart; u++) {
+								for (int v = dctStart; v < dctEnd; v++) {
 
-								float f = 0f;
-								for (int i = 0; i < 16; i++) {
-									for (int j = 0; j < 16; j++) {
-										f += grayscale[(xx + i)][yy + j]
-												* constants[u][v][i][j];
+									double f = 0;
+									for (int i = 0; i < 16; i++) {
+										for (int j = 0; j < 16; j++) {
+											f += grayscale[(xx + i)][yy + j]
+													* constants[u][v][i][j];
+										}
 									}
-								}
 
-								blocks[idx][u * 16 + v] = (short) Math.round(f
-										/ QUANT[u][v]);
+									blocks[idx][u * 16 + v] = (short) Math
+											.round(f / QUANT[u][v]);
+								}
+							}
+
+							/*
+							 * Lower part (left and right together)...
+							 */
+							for (int u = dctStart; u < dctEnd; u++) {
+								for (int v = 0; v < dctEnd; v++) {
+
+									double f = 0;
+									for (int i = 0; i < 16; i++) {
+										for (int j = 0; j < 16; j++) {
+											f += grayscale[(xx + i)][yy + j]
+													* constants[u][v][i][j];
+										}
+									}
+
+									blocks[idx][u * 16 + v] = (short) Math
+											.round(f / QUANT[u][v]);
+								}
 							}
 						}
 					}
