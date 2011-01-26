@@ -141,6 +141,7 @@ public class RobustMatchPartialDCT extends RobustMatch implements Observer {
 		notifyObservers(new Event(Event.EventType.STATUS,
 				"Number of unique DCT blocks (" + c + ") computed in "
 						+ takeTime() + " ms"));
+		
 		/* Required for progress notifications. */
 		secondStep = true;
 
@@ -351,7 +352,7 @@ public class RobustMatchPartialDCT extends RobustMatch implements Observer {
 					}
 				}
 
-				if (num == 0 && xx % 16 == 0) {
+				if (num == threads-1 && xx % num == 0) {
 					setChanged();
 					notifyObservers((float) xx / (float) (height - 15));
 				}
@@ -438,10 +439,6 @@ public class RobustMatchPartialDCT extends RobustMatch implements Observer {
 
 		public short[] getBlock() {
 			return block;
-		}
-
-		public void setBlock(short[] block) {
-			this.block = block;
 		}
 
 	}
