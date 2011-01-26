@@ -53,22 +53,7 @@ public class RobustMatchSimple extends RobustMatch implements Observer {
 		notifyObservers(new Event(Event.EventType.STATUS,
 				"Luminance matrix of image calculated in " + takeTime() + "ms"));
 
-		final float[][][][] constants = new float[16][16][16][16];
-
-		for (int u = 0; u < 16; u++) {
-			float alphau = (float) (u == 0 ? Math.sqrt(1.0f / 16.0f) : Math.sqrt(2.0f / 16.0f));
-			for (int v = 0; v < 16; v++) {
-				float alphav = (float) (v == 0 ? Math.sqrt(1.0f / 16.0f) : Math.sqrt(2.0f / 16.0f));
-				for (int i = 0; i < 16; i++) {
-					for (int j = 0; j < 16; j++) {
-						constants[u][v][i][j] = (float) (alphau * alphav
-								* Math.cos((Math.PI * ( i + 0.5f) * u) / 16.0f) * Math
-								.cos((Math.PI * (i * j + 0.5f) * v) / 16.0f));
-					}
-				}
-				QUANT[u][v] *= quality;
-			}
-		}
+		final float[][][][] constants = preComputeConstants(quality);
 
 		/*
 		 * Calculate the dcts of each block...
