@@ -1,6 +1,8 @@
 package model.algorithms;
 
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Observable;
 import java.util.Observer;
 
@@ -104,7 +106,11 @@ public class RobustMatchPartialDCT extends RobustMatch implements Observer {
 		int[] compareMask = { 0, 1, 2, 3, 16, 17, 18, 19, 32, 33, 34, 35, 48,
 				49, 50, 51 };
 
-		QuickSort.sort(blocks, compareMask);
+		
+		testSort(blocks);
+
+		
+		
 		setChanged();
 		notifyObservers(new Event(Event.EventType.STATUS,
 				"Lexicographically sorted all 4x4 DCTs in " + takeTime() + "ms"));
@@ -167,7 +173,8 @@ public class RobustMatchPartialDCT extends RobustMatch implements Observer {
 		for (int i = 0; i < 256; i++)
 			compareMask[i] = i;
 
-		QuickSort.sort(blocks, compareMask);
+		testSort(blocks);
+		
 		setChanged();
 		notifyObservers(new Event(Event.EventType.STATUS,
 				"Lexicographically sorted all non-unique 16x16 DCTs in "
@@ -393,5 +400,46 @@ public class RobustMatchPartialDCT extends RobustMatch implements Observer {
 			n--;
 		} while (n > 1 && change);
 	}
+	
+	private void testSort(short[][] blocks) {
+		ArrayList<ShortBlock> test = new ArrayList<RobustMatchPartialDCT.ShortBlock>();
+		for (int i = 0; i < blocks.length - 1; i++) {
+			test.add(i, new ShortBlock(blocks[i]));
+		}
+		Collections.sort(test);
+		for (int i = 0; i < blocks.length - 1; i++) {
+			blocks[i] = test.get(i).getBlock();
+		}
+	}
 
+	private class ShortBlock implements Comparable<ShortBlock> {
+		private short[] block;
+
+		public ShortBlock(short[] block) {
+			this.block = block;
+		}
+
+		@Override
+		public int compareTo(ShortBlock o) {
+			short[] b = o.getBlock();
+
+			for (int i = 0; i < 256; i++) {
+				if (block[i] < b[i])
+					return -1;
+				if (block[i] > b[i])
+					return 1;
+			}
+
+			return 0;
+		}
+
+		public short[] getBlock() {
+			return block;
+		}
+
+		public void setBlock(short[] block) {
+			this.block = block;
+		}
+
+	}
 }
