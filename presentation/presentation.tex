@@ -111,6 +111,7 @@
 
 \section{Robust Match Algorithmen}
 \begin{frame}
+\frametitle{Robust Match Algorithmen}
 	\begin{itemize}
 		\item Es wurden 3 verschiedene Varianten des Robust Match Algorithmus implementiert.
 		\item Die Berechnung der DCT-Koeffizienten für jeden Block und das anschließende Sortieren tragen den größten Teil zur Laufzeit bei.
@@ -120,6 +121,7 @@
 
 \subsection{Naiv}
 \begin{frame}
+\frametitle{Robust Match Algorithmen -- Naiv}
 	\begin{itemize}
 		\item Berechnung der $16x16$ DCT-Matrizen mithilfe der vorgegebenen Formel.
 		\item Vorberechnung aller konstanten Faktoren.
@@ -130,6 +132,7 @@
 
 \subsection{Matrixmultiplikation}
 \begin{frame}
+\frametitle{Robust Match Algorithmen -- Matrixmultiplikation}
 	\begin{itemize}
 		\item Die $16x16$ DCT-Koeffizientenmatrizen werden durch Multiplikation einer speziellen Matrix $A$ von links und rechts gewonnen.
 		\item	\begin{equation*}
@@ -142,6 +145,7 @@
 
 \subsection{Partielle Berechnung}
 \begin{frame}
+\frametitle{Robust Match Algorithmen -- Partielle Berechnung}
 	\begin{itemize}
 		\item Idee: Die \emph{relevanten} Elemente der DCT-Koeffizientenmatrix stehen \enquote{links oben}. Hier werden sich also die Blöcke am wahrscheinlichsten unterscheiden.
 		\item Berechnung der ersten $16$ Werte der DCT-Matrix jedes Blockes (Eine $4x4$ Matrix \enquote{links oben}).
@@ -154,6 +158,7 @@
 
 \section{Ergebnisse}
 \begin{frame}
+\frametitle{Ergebnisse}
 	\begin{itemize}
 		\item Naiv: Sehr langsam, gute Erkennungsrate
 		\item Matrixmultiplikation: Schnell, schlechte Erkennungsrate
@@ -163,6 +168,7 @@
 
 \section{Graphical User Interface}
 \begin{frame}
+\frametitle{Graphical User Interface}
 	Funktionalität:
 	\begin{itemize}
 		\item Bilddatei laden/öffnen, Auswahl einer Implementierung des Algorithmus, Starten/Abbruch des ausgewählten Algorithmus
