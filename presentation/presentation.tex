@@ -1,0 +1,183 @@
+% ----------------------------------------------------------------------------
+% ------------------------Bachelor Thesis
+% ----------------------------------------------------------------------------
+\documentclass[11pt]{beamer}
+\usepackage[ngerman,english]{babel}
+\usepackage[T1]{fontenc}
+\usepackage[latin1]{inputenc}
+\usepackage[vlined,ruled]{algorithm2e}
+\usepackage{libertine,microtype,lipsum,csquotes,pgfplots,
+        enumerate,amssymb,fixltx2e,listings,lastpage,fancybox,pgfplots}
+\usepackage[scaled=.9]{inconsolata}
+%\usepackage[nocut]{thmbox}
+\usepackage{graphicx}
+
+% -----------------------------------------------------
+% ---------------- Package setup
+% -----------------------------------------------------
+%\hypersetup{pdfstartview={FitH}}
+
+\lstset{
+                breakautoindent=true,
+                breakindent=2em,
+                breaklines=true,
+                tabsize=4,
+                frame=blrt,
+                frameround=tttt,
+                captionpos=b,
+                basicstyle=\scriptsize\ttfamily,
+                keywordstyle={\color{SkyBlue}},
+                %commentstyle={\color{OliveGreen}},
+                stringstyle={\color{ScarletRed}},
+                showspaces=false,
+                %numbers=right,
+                %numberstyle=\scriptsize,
+                %stepnumber=1, 
+                %numbersep=5pt,
+                %showtabs=false
+                prebreak = \raisebox{0ex}[0ex][0ex]{\ensuremath{\hookleftarrow}},
+                aboveskip={1.5\baselineskip},
+                columns=fixed,
+                upquote=true,
+                extendedchars=true
+                }
+
+% ------------------------------------------
+% -------- xcolor - (Tango)
+% ------------------------------------------
+
+\definecolor{LightButter}{rgb}{0.98,0.91,0.31}
+\definecolor{LightOrange}{rgb}{0.98,0.68,0.24}
+\definecolor{LightChocolate}{rgb}{0.91,0.72,0.43}
+\definecolor{LightChameleon}{rgb}{0.54,0.88,0.20}
+\definecolor{LightSkyBlue}{rgb}{0.45,0.62,0.81}
+\definecolor{LightPlum}{rgb}{0.68,0.50,0.66}
+\definecolor{LightScarletRed}{rgb}{0.93,0.16,0.16}
+\definecolor{Butter}{rgb}{0.93,0.86,0.25}
+\definecolor{Orange}{rgb}{0.96,0.47,0.00}
+\definecolor{Chocolate}{rgb}{0.75,0.49,0.07}
+\definecolor{Chameleon}{rgb}{0.45,0.82,0.09}
+\definecolor{SkyBlue}{rgb}{0.20,0.39,0.64}
+\definecolor{Plum}{rgb}{0.46,0.31,0.48}
+\definecolor{ScarletRed}{rgb}{0.80,0.00,0.00}
+\definecolor{DarkButter}{rgb}{0.77,0.62,0.00}
+\definecolor{DarkOrange}{rgb}{0.80,0.36,0.00}
+\definecolor{DarkChocolate}{rgb}{0.56,0.35,0.01}
+\definecolor{DarkChameleon}{rgb}{0.30,0.60,0.02}
+\definecolor{DarkSkyBlue}{rgb}{0.12,0.29,0.53}
+\definecolor{DarkPlum}{rgb}{0.36,0.21,0.40}
+\definecolor{DarkScarletRed}{rgb}{0.64,0.00,0.00}
+\definecolor{Aluminium1}{rgb}{0.93,0.93,0.92}
+\definecolor{Aluminium2}{rgb}{0.82,0.84,0.81}
+\definecolor{Aluminium3}{rgb}{0.73,0.74,0.71}
+\definecolor{Aluminium4}{rgb}{0.53,0.54,0.52}
+\definecolor{Aluminium5}{rgb}{0.33,0.34,0.32}
+\definecolor{Aluminium6}{rgb}{0.18,0.20,0.21}
+\definecolor{Brown}{cmyk}{0,0.81,1,0.60}
+\definecolor{OliveGreen}{cmyk}{0.64,0,0.95,0.40}
+\definecolor{CadetBlue}{cmyk}{0.62,0.57,0.23,0}
+
+% ------------------------------------------
+% -------- misc
+% ------------------------------------------
+\renewcommand*\oldstylenums[1]{{\fontfamily{fxlj}\selectfont #1}}
+
+\usetheme{CambridgeUS}
+\useinnertheme{rectangles}
+\usecolortheme{beaver}
+\AtBeginSection[]{\begin{frame}\frametitle{Table of Contents}\tableofcontents[currentsection]\end{frame}}
+\beamertemplatenavigationsymbolsempty
+
+% ------------------------------------------
+% -------- hyphenation rules
+% ------------------------------------------
+\hyphenation{}
+
+\begin{document}
+%\newtheorem[L]{definition}{Definition}
+\graphicspath{{img/}}
+
+% Title stuff
+\title[Copy-Move Detection]{Projekt 2}
+\subtitle{Copy-Move Detection: Robust Match}
+\author[Rainer, Huber, Watzinger]{Rainer Sebastian, Huber Bastian, Watzinger Daniel}
+\institute[University of Passau]{Department of Informatics and Mathematics --- University of Passau}
+\date{\today}
+\subject{Informatics}
+
+\frame{
+        \titlepage
+}
+
+\section{Robust Match Algorithmen}
+\begin{frame}
+	\begin{itemize}
+		\item Es wurden 3 verschiedene Varianten des Robust Match Algorithmus implementiert.
+		\item Die Berechnung der DCT-Koeffizienten für jeden Block und das anschließende Sortieren tragen den größten Teil zur Laufzeit bei.
+		\item Bei allen Ansätzen wurde die DCT-Berechnung parallelisiert.
+    \end{itemize}
+\end{frame}
+
+\subsection{Naiv}
+\begin{frame}
+	\begin{itemize}
+		\item Berechnung der $16x16$ DCT-Matrizen mithilfe der vorgegebenen Formel.
+		\item Vorberechnung aller konstanten Faktoren.
+		\item Es werden genau $256 * 2 + 1$ FLOPS für ein Element der DCT-Koeffizientenmatrix benötigt.
+		\item Die zu bearbeitenden Blöcke werden unter den Threads aufgeteilt.
+    \end{itemize}
+\end{frame}
+
+\subsection{Matrixmultiplikation}
+\begin{frame}
+	\begin{itemize}
+		\item Die $16x16$ DCT-Koeffizientenmatrizen werden durch Multiplikation einer speziellen Matrix $A$ von links und rechts gewonnen.
+		\item	\begin{equation*}
+					A * M * A = DCT
+				\end{equation*}
+		\item Insgesamt werden nur $64*2 + 1$ FLOPS für ein Element der DCT-Koeffizientenmatrix benötigt.
+		\item Die zu bearbeitenden Blöcke werden unter den Threads aufgeteilt.
+    \end{itemize}
+\end{frame}
+
+\subsection{Partielle Berechnung}
+\begin{frame}
+	\begin{itemize}
+		\item Idee: Die \emph{relevanten} Elemente der DCT-Koeffizientenmatrix stehen \enquote{links oben}. Hier werden sich also die Blöcke am wahrscheinlichsten unterscheiden.
+		\item Berechnung der ersten $16$ Werte der DCT-Matrix jedes Blockes (Eine $4x4$ Matrix \enquote{links oben}).
+		\item Sortierung der Blöcke und anschließendes Aussortieren von Blöcken die keine Duplikate besitzen.
+		\item Ermittlung der restlichen Elemente der Koeffizientenmatrizen für die Menge von Blöcken die mindestens einen Partner besitzen.
+		\item Diese ist je nach Bilddatei ca. halb so groß wie die ursprüngliche Menge an Blöcken.
+		\item Die zu bearbeitenden Blöcke werden unter den Threads aufgeteilt.
+    \end{itemize}
+\end{frame}
+
+\section{Ergebnisse}
+\begin{frame}
+	\begin{itemize}
+		\item Naiv: Sehr langsam, gute Erkennungsrate
+		\item Matrixmultiplikation: Schnell, schlechte Erkennungsrate
+		\item Partielle Berechnung: Sehr schnell, selbe Erkennungsrate wie der naive Algorithmus
+	\end{itemize}
+\end{frame}
+
+\section{Graphical User Interface}
+\begin{frame}
+	Funktionalität:
+	\begin{itemize}
+		\item Bilddatei laden/öffnen, Auswahl einer Implementierung des Algorithmus, Starten/Abbruch des ausgewählten Algorithmus
+		\item Multithreading (de)aktivieren, Anpassen der Parameter \texttt{quality} und \texttt{threshold} 
+		\item Nachdem eine Bilddatei bearbeitet wurde kann zwischen einer Darstellung des Originalbilds, der Hervorhebung der ermittelten Regionen und einer Visualisierung der Shiftvektoren gewechselt werden.
+		\item Die ermittelten Shiftvektoren können anhand ihrer Länge dynamisch gefiltert werden.
+    \end{itemize}
+\end{frame}
+
+\section*{Fragen}
+\begin{frame}
+        \frametitle{Fragen}
+        \begin{center}
+                \includegraphics[keepaspectratio=true,width=0.6\textwidth]{question-mark}
+        \end{center}
+\end{frame}
+
+\end{document}
