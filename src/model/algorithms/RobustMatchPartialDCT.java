@@ -9,10 +9,9 @@ import java.util.Observable;
 import java.util.Observer;
 
 import model.Event;
+import model.Event.EventType;
 import model.Result;
 import model.ShiftVector;
-import model.Event.EventType;
-import model.algorithms.utils.QuickSort;
 
 public class RobustMatchPartialDCT extends RobustMatch implements Observer {
 	private static final int BLOCK_X_OFFS = 256;
@@ -96,7 +95,7 @@ public class RobustMatchPartialDCT extends RobustMatch implements Observer {
 				e.printStackTrace();
 			}
 		}
-		
+
 		if (abort)
 			return;
 
@@ -165,7 +164,7 @@ public class RobustMatchPartialDCT extends RobustMatch implements Observer {
 				e.printStackTrace();
 			}
 		}
-		
+
 		if (abort)
 			return;
 
@@ -260,7 +259,7 @@ public class RobustMatchPartialDCT extends RobustMatch implements Observer {
 			}
 		}
 
-		if(abort)
+		if (abort)
 			return;
 		setChanged();
 		notifyObservers(event);
@@ -291,8 +290,9 @@ public class RobustMatchPartialDCT extends RobustMatch implements Observer {
 
 		@Override
 		public void run() {
-			//System.out.println("DCT Start = " + dctStart + "; End = " + dctEnd);
-			
+			// System.out.println("DCT Start = " + dctStart + "; End = " +
+			// dctEnd);
+
 			for (int idx = num; idx < blocks.length && !abort; idx += threads) {
 
 				if (blocks[idx][BLOCK_FLAG_OFFS] == 0) {
@@ -361,10 +361,10 @@ public class RobustMatchPartialDCT extends RobustMatch implements Observer {
 					}
 				}
 
-				 if (num == threads - 1 && idx % num == 0) {
-				 setChanged();
-				 notifyObservers((float) idx / (float) blocks.length);
-				 }
+				if (num == threads - 1) {
+					setChanged();
+					notifyObservers((float) idx / (float) blocks.length);
+				}
 			}
 
 		}

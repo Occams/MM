@@ -27,6 +27,7 @@ import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -48,9 +49,7 @@ import model.Event;
 import model.ShiftVector;
 import model.algorithms.CopyMoveDetectionFactory;
 import model.algorithms.ICopyMoveDetection;
-import model.algorithms.RobustMatchFastFactory;
 import model.algorithms.RobustMatchMMFactory;
-import model.algorithms.RobustMatchPartialDCT;
 import model.algorithms.RobustMatchPartialDCTFactory;
 import model.algorithms.RobustMatchSimpleFactory;
 
@@ -63,7 +62,7 @@ public class View extends JFrame implements Observer {
 	private JCheckBoxMenuItem multithreading, debugSwitch;
 	private JMenuItem exit, open;
 	private JMenu settings, algorithm;
-	private JRadioButtonMenuItem simple, matrixmult,partial;
+	private JRadioButtonMenuItem simple, matrixmult, partial;
 	private BufferedImage image;
 	private CopyMoveDetectionFactory factory;
 	private List<ShiftVector> vectors = new LinkedList<ShiftVector>();
@@ -88,7 +87,7 @@ public class View extends JFrame implements Observer {
 		super();
 		this.factory = factory;
 		setVisible(true);
-		setTitle("Copy-Move Robust Match Algorithm");
+		setTitle("Copy-Move Robust Match");
 		setSize(880, 600);
 		setMinimumSize(new Dimension(880, 600));
 		setResizable(true);
@@ -110,6 +109,7 @@ public class View extends JFrame implements Observer {
 		ImageIcon debugI = new ImageIcon("icons/tool.png");
 		ImageIcon openI = new ImageIcon("icons/open.png");
 		ImageIcon algoI = new ImageIcon("icons/algo.png");
+		ImageIcon aboutI = new ImageIcon("icons/about.png");
 		menubar = new JMenuBar();
 		JMenu file = new JMenu("File");
 		JMenu help = new JMenu("Help");
@@ -198,17 +198,30 @@ public class View extends JFrame implements Observer {
 
 			}
 		});
-		
+
 		partial = new JRadioButtonMenuItem("Partial DCT", algoI, true);
 		partial.addActionListener(new ActionListener() {
-			
+
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				if (partial.isSelected()) {
 					log("Switched to partial DCT algorithm");
 					factory = new RobustMatchPartialDCTFactory();
 				}
-				
+
+			}
+		});
+
+		JMenuItem about = new JMenuItem("About", aboutI);
+		about.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				JDialog dialog = new JDialog(View.this, "About");
+				dialog.add(new JLabel("I'm a dialog", JLabel.CENTER));
+				dialog.setSize(200, 200);
+				dialog.setLocationRelativeTo(null);
+				dialog.setVisible(true);
 			}
 		});
 
@@ -218,6 +231,7 @@ public class View extends JFrame implements Observer {
 		file.add(open);
 		file.addSeparator();
 		file.add(exit);
+		help.add(about);
 		settings.add(multithreading);
 		settings.add(debugSwitch);
 		algorithm.add(matrixmult);
@@ -317,9 +331,7 @@ public class View extends JFrame implements Observer {
 					algorithm.setEnabled(true);
 					open.setEnabled(true);
 					vectors = event.getResult().getVectors();
-					log("Found a total of "
-							+ vectors.size()
-							+ " shiftvectors");
+					log("Found a total of " + vectors.size() + " shiftvectors");
 					displayResult();
 				}
 				break;
@@ -340,28 +352,28 @@ public class View extends JFrame implements Observer {
 		Graphics g = i.getGraphics(), g_alt = i_alt.getGraphics();
 		Color red = new Color(1, 0, 0, 0.25f);
 		Color green = new Color(0, 1, 0, 0.25f);
-		Color white = new Color(1,1,1,0.25f);
+		Color white = new Color(1, 1, 1, 0.25f);
 
 		g.drawImage(image, 0, 0, null);
 		g_alt.drawImage(image, 0, 0, null);
 		g_alt.setColor(white);
-		
+
 		for (ShiftVector v : vectors) {
 			if (getVLenght(v.getDx(), v.getDy()) >= panel.minLength.getValue()) {
-			g.setColor(red);
-			g.fillRect(v.getSx(), v.getSy(), v.getBs(), v.getBs());
-			g.setColor(green);
-			g.fillRect(v.getSx() + v.getDx(), v.getSy() + v.getDy(), v.getBs(),
-					v.getBs());
-			g_alt.drawLine(v.getSx(), v.getSy(), v.getSx() + v.getDx(),
-					v.getSy() + v.getDy());
+				g.setColor(red);
+				g.fillRect(v.getSx(), v.getSy(), v.getBs(), v.getBs());
+				g.setColor(green);
+				g.fillRect(v.getSx() + v.getDx(), v.getSy() + v.getDy(),
+						v.getBs(), v.getBs());
+				g_alt.drawLine(v.getSx(), v.getSy(), v.getSx() + v.getDx(),
+						v.getSy() + v.getDy());
 			}
 		}
 
 		g.dispose();
 		panel.imagePanel.setImages(new BufferedImage[] { i, i_alt, image });
 	}
-	
+
 	private double getVLenght(final int x, final int y) {
 		// return Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
 		return Math.max(Math.abs(x), Math.abs(y));
@@ -443,8 +455,7 @@ public class View extends JFrame implements Observer {
 							log("Settings: Quality = " + getQuality()
 									+ " , Threshold = " + threshold.getValue());
 							algo.detect(image, getQuality(),
-									threshold.getValue(),
-									cores);
+									threshold.getValue(), cores);
 							log.setEditable(false);
 						}
 					});
