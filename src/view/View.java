@@ -218,8 +218,18 @@ public class View extends JFrame implements Observer {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
 				JDialog dialog = new JDialog(View.this, "About");
-				dialog.add(new JLabel("I'm a dialog", JLabel.CENTER));
-				dialog.setSize(200, 200);
+				dialog.setLayout(new GridLayout(5, 1));
+				JLabel label = new JLabel(
+						"Digital Forensics application to detect image forgery",
+						JLabel.CENTER);
+				label.setFont(new Font("Verdana", Font.BOLD, 12));
+				dialog.add(label);
+				dialog.add(new JLabel("----------", JLabel.CENTER));
+				dialog.add(new JLabel("Rainer Sebastian", JLabel.CENTER));
+				dialog.add(new JLabel("Huber Bastian", JLabel.CENTER));
+				dialog.add(new JLabel("Watzinger Daniel", JLabel.CENTER));
+				dialog.setSize(400, 100);
+				dialog.setResizable(false);
 				dialog.setLocationRelativeTo(null);
 				dialog.setVisible(true);
 			}
