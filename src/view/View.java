@@ -104,12 +104,18 @@ public class View extends JFrame implements Observer {
 	}
 
 	private void initMBar() {
-		ImageIcon exitI = new ImageIcon("icons/exit.png");
-		ImageIcon multithreadingI = new ImageIcon("icons/settings.png");
-		ImageIcon debugI = new ImageIcon("icons/tool.png");
-		ImageIcon openI = new ImageIcon("icons/open.png");
-		ImageIcon algoI = new ImageIcon("icons/algo.png");
-		ImageIcon aboutI = new ImageIcon("icons/about.png");
+		ImageIcon exitI = new ImageIcon(getClass().getResource(
+				"/icons/exit.png"));
+		ImageIcon multithreadingI = new ImageIcon(getClass().getResource(
+				"/icons/settings.png"));
+		ImageIcon debugI = new ImageIcon(getClass().getResource(
+				"/icons/tool.png"));
+		ImageIcon openI = new ImageIcon(getClass().getResource(
+				"/icons/open.png"));
+		ImageIcon algoI = new ImageIcon(getClass().getResource(
+				"/icons/algo.png"));
+		ImageIcon aboutI = new ImageIcon(getClass().getResource(
+				"/icons/about.png"));
 		menubar = new JMenuBar();
 		JMenu file = new JMenu("File");
 		JMenu help = new JMenu("Help");
@@ -161,7 +167,7 @@ public class View extends JFrame implements Observer {
 		});
 
 		debugSwitch = new JCheckBoxMenuItem("Show Debugwindow", debugI);
-		debugSwitch.setState(true);
+		debugSwitch.setState(false);
 		debugSwitch.addActionListener(new ActionListener() {
 
 			@Override
@@ -419,6 +425,7 @@ public class View extends JFrame implements Observer {
 			scrollP = new JScrollPane(log);
 			scrollP.setBorder(BorderFactory.createEmptyBorder());
 			scrollP.setAutoscrolls(true);
+			scrollP.setVisible(false);
 			imagePanel = new ImagePanel();
 			add(scrollP, BorderLayout.NORTH);
 			add(imagePanel, BorderLayout.CENTER);
@@ -426,8 +433,10 @@ public class View extends JFrame implements Observer {
 		}
 
 		private void initButtonPanel() {
-			ImageIcon abortI = new ImageIcon("icons/abort.png");
-			ImageIcon startI = new ImageIcon("icons/start.png");
+			ImageIcon abortI = new ImageIcon(getClass().getResource(
+					"/icons/abort.png"));
+			ImageIcon startI = new ImageIcon(getClass().getResource(
+					"/icons/start.png"));
 			GridLayout gLayout = new GridLayout(1, 7);
 			gLayout.setVgap(20);
 			gLayout.setHgap(0);
